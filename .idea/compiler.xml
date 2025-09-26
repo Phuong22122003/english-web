@@ -11,12 +11,14 @@
         <module name="learning-service" />
         <module name="core" />
         <module name="user-service" />
+        <module name="content-service" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-gateway" options="-parameters" />
+      <module name="content-service" options="-parameters" />
       <module name="learning-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
     </option>

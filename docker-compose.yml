@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  postgres:
+  postgres-userservice:
     image: postgres
     container_name: postgres-userservice
     restart: always
@@ -14,8 +14,23 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_user_data:/var/lib/postgresql/data
     command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
+  postgres-contentservice:
+    image: postgres
+    container_name: postgres-contentservice
+    restart: always
+    environment:
+      POSTGRES_DB: contentservice
+      POSTGRES_USER: dbowner
+      POSTGRES_PASSWORD: dbowner
+      TZ: Asia/Ho_Chi_Minh
+      PGTZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_content_data:/var/lib/postgresql/data
+    command: [ "postgres", "-c", "timezone=Asia/Ho_Chi_Minh" ]
   redis:
     image: redis:7.2
     container_name: redis
@@ -28,5 +43,6 @@ services:
     ports:
       - "5540:5540"
 volumes:
-  postgres_data:
+  postgres_user_data:
+  postgres_content_data:
   redis_data:

@@ -1,0 +1,37 @@
+package com.english.content_service.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "listening_test_question")
+public class ListeningTestQuestion {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+
+    @ManyToOne
+    @JoinColumn(name = "test_id")
+    private ListeningTest test;
+
+    @Column(name = "audio_url")
+    private String audioUrl;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    private String question;
+
+    @Column(columnDefinition = "jsonb")
+    private String options;
+
+    @Column(name = "correct_answer")
+    private String correctAnswer;
+
+    private String explaination;
+}
