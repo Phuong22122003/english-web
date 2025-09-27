@@ -30,7 +30,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     @NonFinal
     @Value("${app.api-prefix}")
     private String API_PREFIX;
-    String[] publicEndPoints = {};
+    String[] publicEndPoints = {
+            "/user-service/authenticate/signup",
+            "/user-service/authenticate/login"
+    };
 
     private IdentityService identityService;
 

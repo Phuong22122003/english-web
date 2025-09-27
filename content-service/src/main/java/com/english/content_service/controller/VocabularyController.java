@@ -30,7 +30,7 @@ public class VocabularyController {
     public ResponseEntity<?> getVocabulariesByTopicId(@PathVariable(name = "topic_id") String topicId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok().body(vocabularyService.getVocabulariesByTopicId(topicId, page, size));
+        return ResponseEntity.ok().body(vocabularyService.getVocabulariesByTopicId(topicId));
     }
     @GetMapping("/{topic_id}/tests")
     public ResponseEntity<?> getTestsByTopicId(@PathVariable(name = "topic_id") String topicId,

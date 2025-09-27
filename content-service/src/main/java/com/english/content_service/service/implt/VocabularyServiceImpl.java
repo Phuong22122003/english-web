@@ -1,13 +1,11 @@
 package com.english.content_service.service.implt;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.english.content_service.dto.response.*;
 import org.springframework.stereotype.Service;
 
-import com.english.content_service.dto.response.VocabTopicResponse;
-import com.english.content_service.dto.response.VocabularyResponse;
-import com.english.content_service.dto.response.VocabularyTestQuestionResponse;
-import com.english.content_service.dto.response.VocabularyTestResponse;
 import com.english.content_service.entity.Vocabulary;
 import com.english.content_service.entity.VocabularyTest;
 import com.english.content_service.entity.VocabularyTestQuestion;
@@ -42,11 +40,14 @@ public class VocabularyServiceImpl implements VocabularyService {
         return new PageImpl<>(topicResponses, PageRequest.of(page, size), topics.getTotalElements());
     }
     @Override
-    public Page<VocabularyResponse> getVocabulariesByTopicId(String topicId, int page, int size) {
-        Page<Vocabulary> vocabularies = vocabularyRepository.findByTopicId(topicId, PageRequest.of(page, size));
-        List<Vocabulary> vocabularyList = vocabularies.getContent();
-        List<VocabularyResponse> vocabularyResponses = vocabularyMapper.toVocabularyResponses(vocabularyList);
-        return new PageImpl<>(vocabularyResponses, PageRequest.of(page, size), vocabularies.getTotalElements());
+    public GetVocabularyTopicResponse getVocabulariesByTopicId(String topicId) {
+        List<Vocabulary> vocabularies = vocabularyRepository.findByTopicId(topicId);
+        Optional<VocabularyTopic> topicOpt = vocabularyTopicRepository.findById(topicId);
+        return topicOpt.map(vocabularyTopic -> GetVocabularyTopicResponse.builder()
+                .name(vocabularyTopic.getName())
+                .topicId(vocabularyTopic.getId())
+                .vocabularies(vocabularyMapper.toVocabularyResponses(vocabularies))
+                .build()).orElse(null);
     }
     @Override
     public Page<VocabularyTestResponse> getTestsByTopicId(String topicId, int page, int size) {

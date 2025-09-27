@@ -7,8 +7,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface VocabularyRepository extends JpaRepository<Vocabulary, String> {
     // Add custom query methods here if needed
-    public Page<Vocabulary> findByTopicId(String topicId, Pageable pageable);
+    public List<Vocabulary> findByTopicId(String topicId);
 }
