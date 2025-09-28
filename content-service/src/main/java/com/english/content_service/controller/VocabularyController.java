@@ -1,14 +1,10 @@
 package com.english.content_service.controller;
 
+import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
+import com.english.dto.AppResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.english.content_service.dto.request.VocabTopicRequest;
@@ -41,12 +37,22 @@ public class VocabularyController {
     public ResponseEntity<VocabTopicResponse> createTopic(@RequestPart VocabTopicRequest topic, @RequestPart(required = false,name = "image") MultipartFile imageFile) {
         return ResponseEntity.ok().body(vocabularyService.addTopic(topic, imageFile));
     }
+    @DeleteMapping("/topics/{topic_id}")
+    public ResponseEntity<?> deleteTopic(@PathVariable(name = "topic_id") String topicId){
+        this.vocabularyService.deleteTopic(topicId);
+        return ResponseEntity.ok().body(AppResponse.builder().message("Delete topic successfully").build());
+    }
     // vocabulary
     @GetMapping("/{topic_id}/vocabularies")
     public ResponseEntity<?> getVocabulariesByTopicId(@PathVariable(name = "topic_id") String topicId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok().body(vocabularyService.getVocabulariesByTopicId(topicId));
+    }
+    @PostMapping("/{topic_id}/vocabularies")
+    public ResponseEntity<?> addVocabularies(@PathVariable("topic_id") String topicId, @RequestPart(name = "vocabularies") List<VocabularyRequest> requests,
+                                             @RequestPart (name = "images") List<MultipartFile> imageFiles, @RequestPart(name = "audios") List<MultipartFile> audioFiles){
+        return ResponseEntity.ok().body(vocabularyService.addVocabularies(topicId,requests,imageFiles,audioFiles));
     }
     //test
     @GetMapping("/{topic_id}/tests")
@@ -55,15 +61,15 @@ public class VocabularyController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok().body(vocabularyService.getTestsByTopicId(topicId, page, size));
     }
-    @GetMapping("/tests/{test_id}/questions")
-    public ResponseEntity<?> getTestQuestionsByTestId(@PathVariable(name = "test_id") String testId) {
-        return ResponseEntity.ok().body(vocabularyService.getTestQuestionsByTestId(testId));
-    }
 
     @PostMapping("/{topic_id}/tests")
     public  ResponseEntity<?> createTest(@PathVariable(name = "topic_id") String topicId,@RequestPart(name = "test")VocabularyTestRequest vocabularyTestRequest,@RequestPart(name = "images") List<MultipartFile> images){
-        vocabularyService.addTest(topicId,vocabularyTestRequest,images);
-        return ResponseEntity.ok().body("Add test successfully");
+        return ResponseEntity.ok().body(vocabularyService.addTest(topicId,vocabularyTestRequest,images));
+    }
+
+    @GetMapping("/tests/{test_id}/questions")
+    public ResponseEntity<?> getTestQuestionsByTestId(@PathVariable(name = "test_id") String testId) {
+        return ResponseEntity.ok().body(vocabularyService.getTestQuestionsByTestId(testId));
     }
 
 }

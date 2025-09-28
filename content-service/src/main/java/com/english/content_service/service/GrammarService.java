@@ -1,8 +1,11 @@
 package com.english.content_service.service;
 
+import com.english.content_service.dto.request.GrammarRequest;
+import com.english.content_service.dto.request.GrammarTopicRequest;
 import com.english.content_service.dto.response.*;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,4 +18,8 @@ public interface GrammarService {
     GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
 
     List<GrammarTestQuestionResponse> getTestQuestionsByTestId(String testId);
+
+    GrammarTopicResponse addTopic(GrammarTopicRequest topic, MultipartFile imageFile);
+
+    GrammarResponse addGrammar(String topicId, GrammarRequest request);
 }

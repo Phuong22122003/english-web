@@ -107,6 +107,7 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
     @Override
     // admin
+    // delete file and all test and question
     public void deleteTopic(String topicId) {
         VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId).orElseThrow(()->{
             return new RuntimeException("Topic not found");
@@ -156,7 +157,7 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
 
     @Override
-    public void addTest(String topicId, VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles) {
+    public VocabularyTestResponse addTest(String topicId, VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles) {
         VocabularyTopic topic = vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new RuntimeException("Topic not found"));
         VocabularyTest test =  VocabularyTest
                 .builder()
@@ -168,6 +169,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         test = vocabularyTestRepository.save(test);
         List<VocabularyTestQuestion> questions = vocabularyMapper.toVocabularyTestQuestions(vocabularyTestRequest.getQuestions());
         List<String> publicIds = new ArrayList<>();
+        VocabularyTestResponse vocabularyTestResponse;
         try{
             for(int i = 0; i< questions.size();i++){
                 VocabularyTestQuestion q = questions.get(i);
@@ -179,12 +181,15 @@ public class VocabularyServiceImpl implements VocabularyService {
                     publicIds.add(q.getPublicId());
                 }
             }
-            vocabularyTestQuestionRepository.saveAll(questions);
+            questions = vocabularyTestQuestionRepository.saveAll(questions);
         } catch (Exception e) {
             for(String publicId: publicIds){
                 fileService.deleteFile(publicId);
             }
             throw new RuntimeException(e);
         }
+        vocabularyTestResponse = vocabularyMapper.toVocabularyTestResponse(test);
+        vocabularyTestResponse.setQuestions(vocabularyMapper.toVocabularyTestQuestionResponses(questions));
+        return  vocabularyTestResponse;
     }
 }

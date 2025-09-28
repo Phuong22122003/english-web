@@ -1,5 +1,7 @@
 package com.english.content_service.service.implt;
 
+import com.english.content_service.dto.request.GrammarRequest;
+import com.english.content_service.dto.request.GrammarTopicRequest;
 import com.english.content_service.dto.response.*;
 import com.english.content_service.entity.Grammar;
 import com.english.content_service.entity.GrammarTest;
@@ -10,6 +12,8 @@ import com.english.content_service.repository.GrammarRepository;
 import com.english.content_service.repository.GrammarTestQuestionRepository;
 import com.english.content_service.repository.GrammarTestRepository;
 import com.english.content_service.repository.GrammarTopicRepository;
+import com.english.dto.FileResponse;
+import com.english.service.FileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,7 +22,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import com.english.content_service.service.GrammarService;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +37,7 @@ public class GrammarServiceImpl implements GrammarService {
     GrammarTestRepository grammarTestRepository;
     GrammarTestQuestionRepository grammarTestQuestionRepository;
     GrammarMapper grammarMapper;
+    FileService fileService;
 
     @Override
     public Page<GrammarTopicResponse> getTopics(int page, int size) {
@@ -69,5 +76,31 @@ public class GrammarServiceImpl implements GrammarService {
     public List<GrammarTestQuestionResponse> getTestQuestionsByTestId(String testId) {
         List<GrammarTestQuestion> questions = grammarTestQuestionRepository.findByTestId(testId);
         return grammarMapper.toGrammarTestQuestionResponses(questions);
+    }
+
+    @Override
+    public GrammarTopicResponse addTopic(GrammarTopicRequest request, MultipartFile imageFile) {
+        GrammarTopic topic = new GrammarTopic();
+        topic.setCreatedAt(LocalDateTime.now());
+        topic.setName(request.getName());
+        topic.setDescription(request.getDescription());
+        FileResponse fileResponse = fileService.uploadImage(imageFile);
+        topic.setImageUrl(fileResponse.getUrl());
+        topic.setPublicId(fileResponse.getPublicId());
+        grammarTopicRepository.save(topic);
+        return grammarMapper.toGrammarTopicResponse(topic);
+    }
+
+    @Override
+    public GrammarResponse addGrammar(String topicId, GrammarRequest request) {
+        GrammarTopic topic = this.grammarTopicRepository.findById(topicId).orElseThrow(()->new RuntimeException("Grammar topic not found"));
+        Grammar grammar = Grammar
+                .builder()
+                .title(request.getTitle())
+                .content(request.getContent())
+                .topic(topic)
+                .createdAt(LocalDateTime.now())
+                .build();
+        return grammarMapper.toGrammarResponse(grammar);
     }
 }

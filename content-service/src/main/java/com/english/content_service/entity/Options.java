@@ -11,13 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Options {
-    @JsonProperty("A")
     private String A;
-    @JsonProperty("B")
     private String B;
-    @JsonProperty("C")
     private String C;
-    @JsonProperty("D")
     private String D;
     // getter/setter   
 }

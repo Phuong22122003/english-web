@@ -1,17 +1,17 @@
 package com.english.content_service.controller;
 
+import com.english.content_service.dto.request.GrammarRequest;
+import com.english.content_service.dto.request.GrammarTopicRequest;
+import com.english.content_service.dto.response.GrammarTopicResponse;
 import com.english.content_service.service.GrammarService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/grammar")
@@ -22,10 +22,21 @@ public class GrammarController {
 
     GrammarService grammarService;
 
-    @GetMapping
-    public ResponseEntity<?> getAllGrammars(@RequestParam(defaultValue = "0") int page,
+    //grammar topic
+    @GetMapping("/topics")
+    public ResponseEntity<?> getTopics(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(grammarService.getTopics(page, size));
+    }
+    @PostMapping("/topics")
+    public ResponseEntity<GrammarTopicResponse> addTopic(@RequestPart(name = "topic") GrammarTopicRequest request, @RequestPart("image")MultipartFile image){
+        return ResponseEntity.ok().body(grammarService.addTopic(request,image));
+    }
+
+    //grammar
+    @PostMapping("/{topic_id}/grammars")
+    public ResponseEntity<?> addGrammar(@PathVariable(name = "topic_id") String topicId, @RequestBody GrammarRequest grammar){
+        return ResponseEntity.ok().body(grammarService.addGrammar(topicId,grammar));
     }
 
     @GetMapping("/{grammar_id}")
@@ -33,6 +44,7 @@ public class GrammarController {
         return ResponseEntity.ok(grammarService.getGrammarsByTopicId(grammarId));
     }
 
+    //test
     @GetMapping("/{grammar_id}/tests")
     public ResponseEntity<?> getTestsByGrammarId(@PathVariable("grammar_id") String grammarId,
                                                  @RequestParam(defaultValue = "0") int page,
