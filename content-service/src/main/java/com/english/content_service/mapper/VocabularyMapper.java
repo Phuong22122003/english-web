@@ -2,9 +2,12 @@ package com.english.content_service.mapper;
 
 import java.util.List;
 
+import com.english.content_service.dto.request.VocabularyTestQuestionRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import com.english.content_service.dto.request.VocabTopicRequest;
+import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.response.VocabTopicResponse;
 import com.english.content_service.dto.response.VocabularyResponse;
 import com.english.content_service.dto.response.VocabularyTestQuestionResponse;
@@ -18,8 +21,12 @@ import com.english.content_service.entity.VocabularyTopic;
 public interface VocabularyMapper {
     
     //topic
+    VocabTopicResponse toVocabTopicResponse(VocabularyTopic vocabularyTopic);
     List<VocabTopicResponse> toVocabTopicResponses(List<VocabularyTopic> topics);
-    
+    @Mapping(ignore = true, target = "id")
+    @Mapping(ignore = true, target = "createdAt")
+    @Mapping(ignore = true, target = "imageUrl")
+    VocabularyTopic toVocabTopic(VocabTopicRequest request);
 
 
     // vocabulary
@@ -27,14 +34,25 @@ public interface VocabularyMapper {
     VocabularyResponse toVocabularyResponse(Vocabulary vocabulary);
     List<VocabularyResponse> toVocabularyResponses(List<Vocabulary> vocabularies);
 
+    @Mapping(ignore = true, target = "id")
+    @Mapping(ignore = true, target = "topic")
+    @Mapping(ignore = true, target = "imageUrl")
+    @Mapping(ignore = true, target = "audioUrl")
+    @Mapping(ignore = true, target = "createdAt")
+    Vocabulary toVocabulary(VocabularyRequest request);
+    List<Vocabulary> toVocabularies(List<VocabularyRequest> requests);
+
+
     //test
     @Mapping(target = "topicId", source = "topic.id")
     VocabularyTestResponse toVocabularyTestResponse(VocabularyTest test);
     List<VocabularyTestResponse> toVocabularyTestResponses(List<VocabularyTest> tests);
+
 
     //question
     @Mapping(target = "testId", source = "test.id")
     VocabularyTestQuestionResponse toVocabularyTestQuestionResponse(VocabularyTestQuestion question);
     List<VocabularyTestQuestionResponse> toVocabularyTestQuestionResponses(List<VocabularyTestQuestion> questions);
 
+    List<VocabularyTestQuestion> toVocabularyTestQuestions(List<VocabularyTestQuestionRequest> requests);
 }

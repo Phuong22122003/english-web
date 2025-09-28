@@ -70,4 +70,12 @@ public class FileService {
             throw new RuntimeException("Cannot upload file");
         }
     }
+    public void deleteFile(String public_id){
+        try{
+            this.cloudinary.uploader().destroy(public_id,ObjectUtils.asMap());
+        }
+        catch(Exception ex){
+            throw new RuntimeException("Can not delete file");
+        }
+    }
 }

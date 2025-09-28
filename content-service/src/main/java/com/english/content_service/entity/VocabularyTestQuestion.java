@@ -33,4 +33,12 @@ public class VocabularyTestQuestion {
 
     @Column(name = "question_order")
     private Integer questionOrder;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "public_id")
+    private String publicId;
+
+    private String explaination;
 }

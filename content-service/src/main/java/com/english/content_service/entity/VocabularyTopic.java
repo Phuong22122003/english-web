@@ -26,4 +26,7 @@ public class VocabularyTopic {
 
     @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(name = "public_id")
+    private String publicId;
 }

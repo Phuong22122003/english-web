@@ -37,4 +37,11 @@ public class Vocabulary {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "public_audio_id")
+    private String publicAudioId;
+
+    @Column(name = "public_image_id")
+    private String publicImageId;
+
 }
