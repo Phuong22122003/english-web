@@ -13,7 +13,8 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GrammarTestResponse {
     private String id;
-    private String grammarId; // lấy từ Grammar
+    private String grammarId;
     private Integer duration;
     private String createdAt;
+    private String name;
 }

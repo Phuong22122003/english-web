@@ -59,11 +59,16 @@ public class VocabularyServiceImpl implements VocabularyService {
                 .build()).orElse(null);
     }
     @Override
-    public Page<VocabularyTestResponse> getTestsByTopicId(String topicId, int page, int size) {
+    public GetTestsVocabByTopicIdResponse getTestsByTopicId(String topicId, int page, int size) {
         Page<VocabularyTest> tests = vocabularyTestRepository.findByTopicId(topicId, PageRequest.of(page, size));
         List<VocabularyTest> testList = tests.getContent();
         List<VocabularyTestResponse> testResponses = vocabularyMapper.toVocabularyTestResponses(testList);
-        return new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements());
+        Optional<VocabularyTopic> topicOtp = vocabularyTopicRepository.findById(topicId);
+        return topicOtp.map(topic -> GetTestsVocabByTopicIdResponse.builder()
+                .vocabularyTests(new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements()))
+                .topicName(topic.getName())
+                .topicId(topicId)
+                .build()).orElse(null);
     }
     @Override
     public GetVocabularyTestQuestionResponse getTestQuestionsByTestId(String testId) {

@@ -1,9 +1,6 @@
 package com.english.content_service.service.implt;
 
-import com.english.content_service.dto.response.GetGrammarTopicResponse;
-import com.english.content_service.dto.response.GrammarTestQuestionResponse;
-import com.english.content_service.dto.response.GrammarTestResponse;
-import com.english.content_service.dto.response.GrammarTopicResponse;
+import com.english.content_service.dto.response.*;
 import com.english.content_service.entity.Grammar;
 import com.english.content_service.entity.GrammarTest;
 import com.english.content_service.entity.GrammarTestQuestion;
@@ -57,10 +54,15 @@ public class GrammarServiceImpl implements GrammarService {
     }
 
     @Override
-    public Page<GrammarTestResponse> getTestsByGrammarId(String grammarId, int page, int size) {
+    public GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size) {
         Page<GrammarTest> tests = grammarTestRepository.findByGrammarId(grammarId, PageRequest.of(page, size));
         List<GrammarTestResponse> testResponses = grammarMapper.toGrammarTestResponses(tests.getContent());
-        return new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements());
+        Optional<Grammar> grammarOtp = grammarRepository.findById(grammarId);
+        return grammarOtp.map(grammar -> GetTestsByGrammarIdResponse.builder()
+                .grammarTests(new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements()))
+                .grammarName(grammar.getTitle())
+                .grammarId(grammar.getId())
+                .build()).orElse(null);
     }
 
     @Override

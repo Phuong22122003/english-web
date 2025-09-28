@@ -27,4 +27,6 @@ public class Grammar {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    private String description;
 }

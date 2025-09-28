@@ -1,9 +1,6 @@
 package com.english.content_service.service;
 
-import com.english.content_service.dto.response.GetGrammarTopicResponse;
-import com.english.content_service.dto.response.GrammarTestQuestionResponse;
-import com.english.content_service.dto.response.GrammarTestResponse;
-import com.english.content_service.dto.response.GrammarTopicResponse;
+import com.english.content_service.dto.response.*;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +12,7 @@ public interface GrammarService {
 
     GetGrammarTopicResponse getGrammarsByTopicId(String topicId);
 
-    Page<GrammarTestResponse> getTestsByGrammarId(String grammarId, int page, int size);
+    GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
 
     List<GrammarTestQuestionResponse> getTestQuestionsByTestId(String testId);
 }
