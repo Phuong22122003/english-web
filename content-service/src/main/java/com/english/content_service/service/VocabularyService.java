@@ -16,7 +16,7 @@ public interface VocabularyService {
     public Page<VocabTopicResponse> getTopics(int page, int size);
     public GetVocabularyTopicResponse getVocabulariesByTopicId(String topicId);
     public Page<VocabularyTestResponse> getTestsByTopicId(String topicId, int page, int size);
-    public List<VocabularyTestQuestionResponse> getTestQuestionsByTestId(String testId);
+    public GetVocabularyTestQuestionResponse getTestQuestionsByTestId(String testId);
     public VocabTopicResponse addTopic(VocabTopicRequest request, MultipartFile imageFile);
     public VocabTopicResponse updateTopic(String topicId, VocabTopicRequest request, MultipartFile imageFile);
     public void deleteTopic(String topicId);

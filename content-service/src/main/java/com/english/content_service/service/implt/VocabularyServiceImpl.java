@@ -66,9 +66,15 @@ public class VocabularyServiceImpl implements VocabularyService {
         return new PageImpl<>(testResponses, PageRequest.of(page, size), tests.getTotalElements());
     }
     @Override
-    public List<VocabularyTestQuestionResponse> getTestQuestionsByTestId(String testId) {
+    public GetVocabularyTestQuestionResponse getTestQuestionsByTestId(String testId) {
         List<VocabularyTestQuestion> questions = vocabularyTestQuestionRepository.findByTestId(testId);
-        return vocabularyMapper.toVocabularyTestQuestionResponses(questions);
+        Optional<VocabularyTest> vocabularyTestOtp = vocabularyTestRepository.findById(testId);
+        return  vocabularyTestOtp.map(vocabularyTest -> GetVocabularyTestQuestionResponse.builder()
+                .topicName(vocabularyTest.getTopic().getName())
+                .topicId(vocabularyTest.getTopic().getId())
+                .duration(vocabularyTest.getDuration())
+                .questions(vocabularyMapper.toVocabularyTestQuestionResponses(questions))
+                .build()).orElse(null);
     }
     @Override
     public VocabTopicResponse addTopic(VocabTopicRequest request, MultipartFile imageFile) {
