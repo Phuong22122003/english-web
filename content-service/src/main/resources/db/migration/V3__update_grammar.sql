@@ -1,2 +1,2 @@
-ALTER TABLE grammar_test ADD COLUMN name;
-ALTER TABLE grammar ADD COLUMN description;
+ALTER TABLE grammar_test ADD COLUMN name VARCHAR(200);
+ALTER TABLE grammar ADD COLUMN description TEXT;
