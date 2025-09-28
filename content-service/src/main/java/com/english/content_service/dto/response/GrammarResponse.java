@@ -13,8 +13,9 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GrammarResponse {
     private String id;
-    private String topicId; // lấy từ GrammarTopic
+    private String topicId;
     private String title;
     private String content;
     private String createdAt;
+    private String description;
 }
