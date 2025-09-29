@@ -1,6 +1,7 @@
 package com.english.content_service.service.implt;
 
 import com.english.content_service.dto.request.GrammarRequest;
+import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.request.GrammarTopicRequest;
 import com.english.content_service.dto.response.*;
 import com.english.content_service.entity.Grammar;
@@ -14,6 +15,7 @@ import com.english.content_service.repository.GrammarTestRepository;
 import com.english.content_service.repository.GrammarTopicRepository;
 import com.english.dto.FileResponse;
 import com.english.service.FileService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -102,5 +104,23 @@ public class GrammarServiceImpl implements GrammarService {
                 .createdAt(LocalDateTime.now())
                 .build();
         return grammarMapper.toGrammarResponse(grammar);
+    }
+
+    @Override
+    @Transactional
+    public GrammarTestResponse addTest(String grammarId,GrammarTestRequest request) {
+        Grammar grammar = grammarRepository.findById(grammarId).orElseThrow(()->new RuntimeException("Grammar not found"));
+        GrammarTest test = grammarMapper.toGrammarTest(request);
+        test.setGrammar(grammar);
+        test.setCreatedAt(LocalDateTime.now());
+        test = grammarTestRepository.save(test);
+        List<GrammarTestQuestion> questions = grammarMapper.toGrammarTestQuestion(request.getQuestions());
+        for(var question: questions){
+            question.setTest(test);
+        }
+        grammarTestQuestionRepository.saveAll(questions);
+        GrammarTestResponse grammarTestResponse = grammarMapper.toGrammarTestResponse(test);
+        grammarTestResponse.setQuestions(grammarMapper.toGrammarTestQuestionResponses(questions));
+        return  grammarTestResponse;
     }
 }

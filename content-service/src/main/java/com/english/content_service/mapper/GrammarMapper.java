@@ -1,5 +1,7 @@
 package com.english.content_service.mapper;
 
+import com.english.content_service.dto.request.GrammarTestQuestionRequest;
+import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.response.GrammarResponse;
 import com.english.content_service.dto.response.GrammarTestQuestionResponse;
 import com.english.content_service.dto.response.GrammarTestResponse;
@@ -30,8 +32,11 @@ public interface GrammarMapper {
     GrammarTestResponse toGrammarTestResponse(GrammarTest test);
     List<GrammarTestResponse> toGrammarTestResponses(List<GrammarTest> tests);
 
+    GrammarTest toGrammarTest(GrammarTestRequest request);
+
     // Question
     @Mapping(target = "testId", source = "test.id")
     GrammarTestQuestionResponse toGrammarTestQuestionResponse(GrammarTestQuestion question);
     List<GrammarTestQuestionResponse> toGrammarTestQuestionResponses(List<GrammarTestQuestion> questions);
+    List<GrammarTestQuestion> toGrammarTestQuestion(List<GrammarTestQuestionRequest> requests);
 }

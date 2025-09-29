@@ -1,6 +1,7 @@
 package com.english.content_service.service;
 
 import com.english.content_service.dto.request.GrammarRequest;
+import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.request.GrammarTopicRequest;
 import com.english.content_service.dto.response.*;
 import org.springframework.data.domain.Page;
@@ -22,4 +23,6 @@ public interface GrammarService {
     GrammarTopicResponse addTopic(GrammarTopicRequest topic, MultipartFile imageFile);
 
     GrammarResponse addGrammar(String topicId, GrammarRequest request);
+
+    GrammarTestResponse addTest(String grammarTopic, GrammarTestRequest request);
 }

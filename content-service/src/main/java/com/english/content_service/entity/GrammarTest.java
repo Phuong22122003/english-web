@@ -17,6 +17,8 @@ public class GrammarTest {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    private String name;
+
     @ManyToOne
     @JoinColumn(name = "grammar_id")
     private Grammar grammar;
@@ -26,5 +28,4 @@ public class GrammarTest {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    private String name;
 }
