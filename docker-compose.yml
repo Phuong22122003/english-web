@@ -42,6 +42,16 @@ services:
     image: redislabs/redisinsight:latest
     ports:
       - "5540:5540"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: always
+    ports:
+      - "6333:6333"   # REST API
+      - "6334:6334"   # gRPC
+    volumes:
+      - ./qdrant_storage:/qdrant/storage  # map volume để lưu dữ liệu
 volumes:
   postgres_user_data:
   postgres_content_data:
