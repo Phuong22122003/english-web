@@ -1,5 +1,6 @@
 package com.english.content_service.dto.response;
 
+import com.english.content_service.entity.Options;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +16,7 @@ public class GrammarTestQuestionResponse {
     private String id;
     private String testId; // lấy từ GrammarTest
     private String question;
-    private String options;       // JSONB -> String
+    private Options options;       // JSONB -> String
     private String correctAnswer;
     private Integer questionOrder;
 }

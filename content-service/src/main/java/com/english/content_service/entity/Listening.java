@@ -33,11 +33,17 @@ public class Listening {
     private String question;
 
     @Column(columnDefinition = "jsonb")
-    private String options;
+    private Options options;
 
     @Column(name = "correct_answer")
     private String correctAnswer;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "public_audio_id")
+    private String publicAudioId;
+
+    @Column(name = "public_image_id")
+    private String publicImageId;
 }

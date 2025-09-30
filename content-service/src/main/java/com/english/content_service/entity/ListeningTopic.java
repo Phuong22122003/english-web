@@ -24,6 +24,9 @@ public class ListeningTopic {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "public_id")
+    private String publicId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 }

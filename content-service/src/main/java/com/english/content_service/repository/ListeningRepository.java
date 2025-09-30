@@ -4,7 +4,10 @@ import com.english.content_service.entity.Listening;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ListeningRepository extends JpaRepository<Listening, String> {
     // Add custom query methods here if needed
+    List<Listening> findByTopicId(String topicId);
 }

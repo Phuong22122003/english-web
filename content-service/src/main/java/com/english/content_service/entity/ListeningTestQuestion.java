@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Data
 @AllArgsConstructor
@@ -28,7 +30,8 @@ public class ListeningTestQuestion {
     private String question;
 
     @Column(columnDefinition = "jsonb")
-    private String options;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Options options;
 
     @Column(name = "correct_answer")
     private String correctAnswer;
