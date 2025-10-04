@@ -75,9 +75,20 @@ public class GrammarServiceImpl implements GrammarService {
     }
 
     @Override
-    public List<GrammarTestQuestionResponse> getTestQuestionsByTestId(String testId) {
+    public GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId) {
         List<GrammarTestQuestion> questions = grammarTestQuestionRepository.findByTestId(testId);
-        return grammarMapper.toGrammarTestQuestionResponses(questions);
+        GrammarTest grammarTest = null;
+        if (questions.size() > 0) {
+            grammarTest = questions.getFirst().getTest();
+        }
+        return GetGrammarTestQuestionsByTestIdResponse.builder()
+                .duration(grammarTest.getDuration())
+                .grammarTestQuestions(grammarMapper.toGrammarTestQuestionResponses(questions))
+                .testName(grammarTest.getName())
+                .testId(grammarTest.getId())
+                .grammarName(grammarTest.getGrammar().getTitle())
+                .grammarId(grammarTest.getGrammar().getId())
+                .build();
     }
 
     @Override
