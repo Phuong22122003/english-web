@@ -32,4 +32,6 @@ public class GrammarTestQuestion {
 
     @Column(name = "question_order")
     private Integer questionOrder;
+
+    private String explaination;
 }

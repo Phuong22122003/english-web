@@ -16,4 +16,6 @@ public class GrammarTestQuestionRequest {
     private String correctAnswer;
 
     private Integer questionOrder;
+
+    private String explaination;
 }

@@ -79,6 +79,8 @@ public class VocabularyServiceImpl implements VocabularyService {
                 .topicName(vocabularyTest.getTopic().getName())
                 .topicId(vocabularyTest.getTopic().getId())
                 .duration(vocabularyTest.getDuration())
+                .testId(vocabularyTest.getId())
+                .testName(vocabularyTest.getName())
                 .questions(vocabularyMapper.toVocabularyTestQuestionResponses(questions))
                 .build()).orElse(null);
     }

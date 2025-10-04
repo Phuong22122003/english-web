@@ -17,5 +17,7 @@ public class GetVocabularyTestQuestionResponse {
     private String topicId;
     private String topicName;
     private Integer duration;
+    private String testId;
+    private String testName;
     private List<VocabularyTestQuestionResponse> questions;
 }
