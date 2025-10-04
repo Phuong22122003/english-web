@@ -16,6 +16,7 @@ import com.english.content_service.entity.Vocabulary;
 import com.english.content_service.entity.VocabularyTest;
 import com.english.content_service.entity.VocabularyTestQuestion;
 import com.english.content_service.entity.VocabularyTopic;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface VocabularyMapper {
@@ -42,6 +43,7 @@ public interface VocabularyMapper {
     Vocabulary toVocabulary(VocabularyRequest request);
     List<Vocabulary> toVocabularies(List<VocabularyRequest> requests);
 
+    void patchUpdate(@MappingTarget Vocabulary vocabulary, VocabularyRequest request);
 
     //test
     @Mapping(target = "topicId", source = "topic.id")

@@ -1,7 +1,7 @@
 package com.english.user_service.controller;
 
 import com.english.user_service.dto.request.*;
-import com.english.dto.AppResponse;
+import com.english.dto.ApiResponse;
 import com.english.user_service.dto.response.VerifyOtpResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,10 +45,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/password/otp")
-    public ResponseEntity<AppResponse<String>> sendOtp(@RequestBody  ForgotPasswordRequest forgotPasswordRequest){
+    public ResponseEntity<ApiResponse<String>> sendOtp(@RequestBody  ForgotPasswordRequest forgotPasswordRequest){
         authenticationService.sendOtp(forgotPasswordRequest);
         return ResponseEntity.ok().body(
-                AppResponse.<String>builder()
+                ApiResponse.<String>builder()
                         .message("Send otp to email "+ forgotPasswordRequest.getEmail()+" successfully")
                         .build()
         );
@@ -59,10 +59,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/password/resets")
-    public ResponseEntity<AppResponse<String>> resetPassword(@RequestBody ResetPasswordRequest request){
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody ResetPasswordRequest request){
         authenticationService.resetPassword(request);
         return ResponseEntity.ok().body(
-                AppResponse.<String>builder()
+                ApiResponse.<String>builder()
                         .message("Password reset successfully")
                         .build()
         );

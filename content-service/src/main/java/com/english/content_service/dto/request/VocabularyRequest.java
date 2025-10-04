@@ -14,4 +14,5 @@ public class VocabularyRequest {
     private String phonetic;
     private String meaning;
     private String example;
+    private String exampleMeaning;
 }

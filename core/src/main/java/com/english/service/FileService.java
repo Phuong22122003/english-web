@@ -59,11 +59,25 @@ public class FileService {
     public FileResponse uploadAudio(MultipartFile file) {
         try {
             Map data = this.cloudinary.uploader().upload(file.getBytes(),ObjectUtils.asMap(
-                        "folder", "audio",  // folder in Cloudinary
                         "resource_type", "video"
                 ));
             String url = data.get("secure_url").toString();
             String publicId = data.get("public_id").toString();
+            return new FileResponse(url,publicId);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot upload file");
+        }
+    }
+    public FileResponse uploadAudio(MultipartFile file,String publicId) {
+        try {
+            Map data = this.cloudinary.uploader().upload(file.getBytes(),ObjectUtils.asMap(
+                    "public_id",publicId,  // folder in Cloudinary
+                        "resource_type", "video",
+                        "overwrite",true
+                ));
+            String url = data.get("secure_url").toString();
+            publicId = data.get("public_id").toString();
             return new FileResponse(url,publicId);
 
         } catch (Exception e) {

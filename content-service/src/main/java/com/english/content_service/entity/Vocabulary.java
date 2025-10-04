@@ -29,6 +29,9 @@ public class Vocabulary {
 
     private String example;
 
+    @Column(name = "example_meaning")
+    private String exampleMeaning;
+
     @Column(name = "audio_url")
     private String audioUrl;
 

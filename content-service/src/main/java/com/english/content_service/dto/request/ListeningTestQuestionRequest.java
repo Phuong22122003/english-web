@@ -5,15 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GrammarTestQuestionRequest {
+@Data
+public class ListeningTestQuestionRequest {
     private String question;
-
     private Options options;
-
     private String correctAnswer;
-
-    private Integer questionOrder;
+    private String explaination;
 }

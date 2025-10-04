@@ -2,7 +2,7 @@ package com.english.content_service.controller;
 
 import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
-import com.english.dto.AppResponse;
+import com.english.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,7 +11,6 @@ import com.english.content_service.dto.request.VocabTopicRequest;
 import com.english.content_service.dto.response.VocabTopicResponse;
 import com.english.content_service.service.VocabularyService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -40,7 +39,7 @@ public class VocabularyController {
     @DeleteMapping("/topics/{topic_id}")
     public ResponseEntity<?> deleteTopic(@PathVariable(name = "topic_id") String topicId){
         this.vocabularyService.deleteTopic(topicId);
-        return ResponseEntity.ok().body(AppResponse.builder().message("Delete topic successfully").build());
+        return ResponseEntity.ok().body(ApiResponse.builder().message("Delete topic successfully").build());
     }
     // vocabulary
     @GetMapping("/{topic_id}/vocabularies")

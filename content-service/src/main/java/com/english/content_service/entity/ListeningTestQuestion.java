@@ -37,4 +37,10 @@ public class ListeningTestQuestion {
     private String correctAnswer;
 
     private String explaination;
+
+    @Column(name = "public_audio_id")
+    private String publicAudioId;
+
+    @Column(name = "public_image_id")
+    private String publicImageId;
 }

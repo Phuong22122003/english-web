@@ -12,17 +12,16 @@ import java.util.List;
 
 @Service
 public interface GrammarService {
+    //topic
     Page<GrammarTopicResponse> getTopics(int page, int size);
-
-    GetGrammarTopicResponse getGrammarsByTopicId(String topicId);
-
-    GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
-
-    List<GrammarTestQuestionResponse> getTestQuestionsByTestId(String testId);
-
     GrammarTopicResponse addTopic(GrammarTopicRequest topic, MultipartFile imageFile);
 
+    //grammar
+    GetGrammarTopicResponse getGrammarsByTopicId(String topicId);
     GrammarResponse addGrammar(String topicId, GrammarRequest request);
 
+    //test
+    List<GrammarTestQuestionResponse> getTestQuestionsByTestId(String testId);
+    GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
     GrammarTestResponse addTest(String grammarTopic, GrammarTestRequest request);
 }

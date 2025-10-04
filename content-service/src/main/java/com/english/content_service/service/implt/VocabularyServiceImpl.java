@@ -9,6 +9,7 @@ import com.english.content_service.dto.request.VocabTopicRequest;
 import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
 import com.english.content_service.dto.response.*;
+import com.english.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -106,15 +107,16 @@ public class VocabularyServiceImpl implements VocabularyService {
         throw new UnsupportedOperationException("Unimplemented method 'updateTopic'");
     }
     @Override
-    // admin
-    // delete file and all test and question
+    // admim
+    // only delete new topic
     public void deleteTopic(String topicId) {
         VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId).orElseThrow(()->{
-            return new RuntimeException("Topic not found");
+            return new NotFoundException("Topic not found");
         });
         this.vocabularyTopicRepository.deleteById(topicId);
         this.fileService.deleteFile(topic.getPublicId());
     }
+
     @Override
     public List<VocabularyResponse> addVocabularies(String topicId, List<VocabularyRequest> requests,
             List<MultipartFile> imageFiles, List<MultipartFile> audioFiles) {
@@ -147,13 +149,29 @@ public class VocabularyServiceImpl implements VocabularyService {
     @Override
     public VocabularyResponse updateVocabulary(String vocabId, VocabularyRequest request, MultipartFile imageFile,
             MultipartFile audioFile) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateVocabulary'");
+       Vocabulary vocabulary = this.vocabularyRepository.findById(vocabId).orElseThrow(()->new NotFoundException("Vocab not found"));
+       this.vocabularyMapper.patchUpdate(vocabulary,request);
+       if(imageFile!=null&&!imageFile.isEmpty()){
+           if(vocabulary.getPublicImageId()!=null){
+               this.fileService.uploadImage(imageFile,vocabulary.getPublicImageId());
+           }
+           else{
+               this.fileService.uploadImage(imageFile);
+           }
+       }
+       if(audioFile!=null&&!audioFile.isEmpty()){
+           if(vocabulary.getPublicAudioId()!=null){
+               this.fileService.uploadAudio(audioFile,vocabulary.getPublicAudioId());
+           }
+           else{
+               this.fileService.uploadAudio(audioFile);
+           }
+       }
+        return vocabularyMapper.toVocabularyResponse(vocabulary);
     }
     @Override
     public void deleteVocabulary(String vocabId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteVocabulary'");
+        this.vocabularyRepository.deleteById(vocabId);
     }
 
     @Override
