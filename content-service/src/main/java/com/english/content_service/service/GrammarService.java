@@ -8,8 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @Service
 public interface GrammarService {
     Page<GrammarTopicResponse> getTopics(int page, int size);
@@ -18,7 +16,7 @@ public interface GrammarService {
 
     GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
 
-    List<GrammarTestQuestionResponse> getTestQuestionsByTestId(String testId);
+    GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId);
 
     GrammarTopicResponse addTopic(GrammarTopicRequest topic, MultipartFile imageFile);
 
