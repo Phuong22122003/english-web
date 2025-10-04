@@ -1,9 +1,11 @@
 package com.english.content_service.controller;
 
 import com.english.content_service.dto.request.GrammarRequest;
+import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.request.GrammarTopicRequest;
 import com.english.content_service.dto.response.GrammarTopicResponse;
 import com.english.content_service.service.GrammarService;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,5 +57,10 @@ public class GrammarController {
     @GetMapping("/tests/{test_id}/questions")
     public ResponseEntity<?> getTestQuestionsByTestId(@PathVariable("test_id") String testId) {
         return ResponseEntity.ok(grammarService.getTestQuestionsByTestId(testId));
+    }
+
+    @PostMapping("/tests/{topic_id}")
+    public ResponseEntity<?> addTest(@PathVariable(name = "topic_id") String topicId, @RequestBody GrammarTestRequest testRequest){
+        return ResponseEntity.ok().body(grammarService.addTest(topicId,testRequest));
     }
 }

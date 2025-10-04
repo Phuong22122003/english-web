@@ -14,9 +14,6 @@ import java.util.List;
 public interface GrammarService {
     //topic
     Page<GrammarTopicResponse> getTopics(int page, int size);
-
-    GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId);
-
     GrammarTopicResponse addTopic(GrammarTopicRequest topic, MultipartFile imageFile);
 
     //grammar
@@ -26,4 +23,5 @@ public interface GrammarService {
     //test
     GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
     GrammarTestResponse addTest(String grammarTopic, GrammarTestRequest request);
+    GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId);
 }

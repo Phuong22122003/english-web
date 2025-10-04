@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handlerNotFoundException(NotFoundException ex){
-        return ResponseEntity.badRequest().body(
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 ApiResponse.builder()
                         .code(HttpStatus.NOT_FOUND.value())
                         .message(ex.getMessage())
