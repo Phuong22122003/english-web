@@ -13,5 +13,4 @@ import java.util.List;
 public interface ListeningRepository extends JpaRepository<Listening, String> {
     // Add custom query methods here if needed
     List<Listening> findByTopicId(String topicId);
-    Page<ListeningTest> findTestsByTopicId(String topicId, Pageable page);
 }

@@ -128,7 +128,7 @@ public class ListeningServiceImpl implements ListeningService {
     @Override
     public ListeningTopicResponse getTestsByTopic(String topicId, int page, int size) {
         var topic = listeningTopicRepository.findById(topicId).orElseThrow(()->new RuntimeException("Topic Not found"));
-        Page<ListeningTest> listeningTestPage = listeningRepository.findTestsByTopicId(topicId, PageRequest.of(page,size));
+        Page<ListeningTest> listeningTestPage = listeningTestRepository.findTestsByTopicId(topicId, PageRequest.of(page,size));
 
         var listeningTests = listeningMapper.toTestReponses(listeningTestPage.getContent());
         Page<ListeningTestReponse> testReponses = new PageImpl<>(listeningTests,PageRequest.of(page,size),listeningTestPage.getTotalElements());
