@@ -1,7 +1,7 @@
 package com.english.content_service.exception;
 
 
-import com.english.dto.ApiResponse;
+import com.english.dto.response.*;
 import com.english.exception.AppException;
 import com.english.exception.BadRequestException;
 import com.english.exception.NotFoundException;

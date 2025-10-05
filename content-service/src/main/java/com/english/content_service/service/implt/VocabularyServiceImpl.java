@@ -8,7 +8,7 @@ import java.util.Optional;
 import com.english.content_service.dto.request.VocabTopicRequest;
 import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
-import com.english.content_service.dto.response.*;
+import com.english.dto.response.*;
 import com.english.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +23,7 @@ import com.english.content_service.repository.VocabularyTestQuestionRepository;
 import com.english.content_service.repository.VocabularyTestRepository;
 import com.english.content_service.repository.VocabularyTopicRepository;
 import com.english.content_service.service.VocabularyService;
-import com.english.dto.FileResponse;
+import com.english.dto.response.*;
 import com.english.service.FileService;
 
 import lombok.AccessLevel;
@@ -150,7 +150,7 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
     @Override
     public VocabularyResponse updateVocabulary(String vocabId, VocabularyRequest request, MultipartFile imageFile,
-            MultipartFile audioFile) {
+                                               MultipartFile audioFile) {
        Vocabulary vocabulary = this.vocabularyRepository.findById(vocabId).orElseThrow(()->new NotFoundException("Vocab not found"));
        this.vocabularyMapper.patchUpdate(vocabulary,request);
        if(imageFile!=null&&!imageFile.isEmpty()){
@@ -211,5 +211,11 @@ public class VocabularyServiceImpl implements VocabularyService {
         vocabularyTestResponse = vocabularyMapper.toVocabularyTestResponse(test);
         vocabularyTestResponse.setQuestions(vocabularyMapper.toVocabularyTestQuestionResponses(questions));
         return  vocabularyTestResponse;
+    }
+
+    @Override
+    public List<VocabularyTestResponse> getTestsByIds(List<String> ids) {
+        List<VocabularyTest> tests = vocabularyTestRepository.findAllById(ids);
+        return vocabularyMapper.toVocabularyTestResponses(tests);
     }
 }

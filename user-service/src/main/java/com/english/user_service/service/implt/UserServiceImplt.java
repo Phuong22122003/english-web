@@ -1,6 +1,6 @@
 package com.english.user_service.service.implt;
 
-import com.english.dto.FileResponse;
+import com.english.dto.response.FileResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;

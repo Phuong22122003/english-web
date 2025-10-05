@@ -3,7 +3,6 @@ package com.english.content_service.service.implt;
 import com.english.content_service.dto.request.GrammarRequest;
 import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.request.GrammarTopicRequest;
-import com.english.content_service.dto.response.*;
 import com.english.content_service.entity.Grammar;
 import com.english.content_service.entity.GrammarTest;
 import com.english.content_service.entity.GrammarTestQuestion;
@@ -13,7 +12,7 @@ import com.english.content_service.repository.GrammarRepository;
 import com.english.content_service.repository.GrammarTestQuestionRepository;
 import com.english.content_service.repository.GrammarTestRepository;
 import com.english.content_service.repository.GrammarTopicRepository;
-import com.english.dto.FileResponse;
+import com.english.dto.response.*;
 import com.english.service.FileService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -89,6 +88,12 @@ public class GrammarServiceImpl implements GrammarService {
                 .grammarName(grammarTest.getGrammar().getTitle())
                 .grammarId(grammarTest.getGrammar().getId())
                 .build();
+    }
+
+    @Override
+    public List<GrammarTestResponse> getTestsByIds(List<String> ids) {
+        List<GrammarTest> tests = grammarTestRepository.findAllById(ids);
+        return grammarMapper.toGrammarTestResponses(tests);
     }
 
     @Override

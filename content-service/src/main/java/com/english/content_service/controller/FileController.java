@@ -1,8 +1,7 @@
 package com.english.content_service.controller;
 
 
-import com.english.dto.ApiResponse;
-import com.english.dto.FileResponse;
+import com.english.dto.response.*;
 import com.english.service.FileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

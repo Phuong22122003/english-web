@@ -3,9 +3,9 @@ package com.english.content_service.controller;
 import com.english.content_service.dto.request.ListeningRequest;
 import com.english.content_service.dto.request.ListeningTestRequest;
 import com.english.content_service.dto.request.ListeningTopicRequest;
-import com.english.content_service.dto.response.ListeningResponse;
-import com.english.content_service.dto.response.ListeningTestReponse;
-import com.english.content_service.dto.response.ListeningTopicResponse;
+import com.english.dto.response.ListeningResponse;
+import com.english.dto.response.ListeningTestReponse;
+import com.english.dto.response.ListeningTopicResponse;
 import com.english.content_service.service.ListeningService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -82,5 +82,10 @@ public class ListeningController {
     @GetMapping("/tests/{test_id}")
     public ResponseEntity<ListeningTestReponse> getTestDetail(@PathVariable("test_id") String testId) {
         return ResponseEntity.ok(listeningService.getTestDetail(testId));
+    }
+
+    @GetMapping("/tests")
+    public ResponseEntity<?> getTestsByIds(@RequestParam(name = "ids") List<String> ids){
+        return ResponseEntity.ok().body(listeningService.getTestByIds(ids));
     }
 }

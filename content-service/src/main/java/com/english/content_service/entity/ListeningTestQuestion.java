@@ -43,4 +43,7 @@ public class ListeningTestQuestion {
 
     @Column(name = "public_image_id")
     private String publicImageId;
+
+    @Column(name = "question_order")
+    private Integer questionOrder;
 }

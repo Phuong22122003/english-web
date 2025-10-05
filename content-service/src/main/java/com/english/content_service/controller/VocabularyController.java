@@ -2,13 +2,13 @@ package com.english.content_service.controller;
 
 import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
-import com.english.dto.ApiResponse;
+import com.english.dto.response.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.english.content_service.dto.request.VocabTopicRequest;
-import com.english.content_service.dto.response.VocabTopicResponse;
+import com.english.dto.response.VocabTopicResponse;
 import com.english.content_service.service.VocabularyService;
 
 import lombok.AccessLevel;
@@ -70,5 +70,8 @@ public class VocabularyController {
     public ResponseEntity<?> getTestQuestionsByTestId(@PathVariable(name = "test_id") String testId) {
         return ResponseEntity.ok().body(vocabularyService.getTestQuestionsByTestId(testId));
     }
-
+    @GetMapping("/tests")
+    public ResponseEntity<?> getTestsByIds(@RequestParam(name = "ids") List<String> ids){
+       return ResponseEntity.ok().body(vocabularyService.getTestsByIds(ids));
+    }
 }

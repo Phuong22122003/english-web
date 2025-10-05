@@ -3,11 +3,9 @@ package com.english.content_service.service.implt;
 import com.english.content_service.dto.request.ListeningRequest;
 import com.english.content_service.dto.request.ListeningTestRequest;
 import com.english.content_service.dto.request.ListeningTopicRequest;
-import com.english.content_service.dto.response.GrammarTopicResponse;
-import com.english.content_service.dto.response.ListeningResponse;
-import com.english.content_service.dto.response.ListeningTestReponse;
-import com.english.content_service.dto.response.ListeningTopicResponse;
-import com.english.content_service.entity.GrammarTopic;
+import com.english.dto.response.ListeningResponse;
+import com.english.dto.response.ListeningTestReponse;
+import com.english.dto.response.ListeningTopicResponse;
 import com.english.content_service.entity.Listening;
 import com.english.content_service.entity.ListeningTest;
 import com.english.content_service.entity.ListeningTopic;
@@ -216,6 +214,11 @@ public class ListeningServiceImpl implements ListeningService {
         return response;
     }
 
+    @Override
+    public List<ListeningTestReponse> getTestByIds(List<String> ids) {
+        List<ListeningTest> tests = listeningTestRepository.findAllById(ids);
+        return listeningMapper.toTestReponses(tests);
+    }
 
 
 }

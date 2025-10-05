@@ -3,7 +3,7 @@ package com.english.content_service.service;
 import com.english.content_service.dto.request.GrammarRequest;
 import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.request.GrammarTopicRequest;
-import com.english.content_service.dto.response.*;
+import com.english.dto.response.*;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,4 +24,5 @@ public interface GrammarService {
     GetTestsByGrammarIdResponse getTestsByGrammarId(String grammarId, int page, int size);
     GrammarTestResponse addTest(String grammarTopic, GrammarTestRequest request);
     GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId);
+    List<GrammarTestResponse> getTestsByIds(List<String> ids);
 }

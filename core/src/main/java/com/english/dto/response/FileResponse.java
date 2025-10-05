@@ -1,4 +1,5 @@
-package com.english.dto;
+package com.english.dto.response;
+
 
 public class FileResponse {
     private String url;

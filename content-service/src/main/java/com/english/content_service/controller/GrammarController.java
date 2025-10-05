@@ -3,9 +3,8 @@ package com.english.content_service.controller;
 import com.english.content_service.dto.request.GrammarRequest;
 import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.request.GrammarTopicRequest;
-import com.english.content_service.dto.response.GrammarTopicResponse;
+import com.english.dto.response.GrammarTopicResponse;
 import com.english.content_service.service.GrammarService;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/grammar")
@@ -62,5 +63,9 @@ public class GrammarController {
     @PostMapping("/tests/{topic_id}")
     public ResponseEntity<?> addTest(@PathVariable(name = "topic_id") String topicId, @RequestBody GrammarTestRequest testRequest){
         return ResponseEntity.ok().body(grammarService.addTest(topicId,testRequest));
+    }
+    @GetMapping("/tests")
+    public ResponseEntity<?> getTestsByIds(@RequestParam(name = "ids") List<String> ids){
+        return ResponseEntity.ok().body(grammarService.getTestsByIds(ids));
     }
 }

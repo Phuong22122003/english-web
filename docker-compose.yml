@@ -31,6 +31,21 @@ services:
     volumes:
       - postgres_content_data:/var/lib/postgresql/data
     command: [ "postgres", "-c", "timezone=Asia/Ho_Chi_Minh" ]
+  postgres-learningservice:
+    image: postgres
+    container_name: postgres-learningservice
+    restart: always
+    environment:
+      POSTGRES_DB: learningservice
+      POSTGRES_USER: dbowner
+      POSTGRES_PASSWORD: dbowner
+      TZ: Asia/Ho_Chi_Minh
+      PGTZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_learning_data:/var/lib/postgresql/data
+    command: [ "postgres", "-c", "timezone=Asia/Ho_Chi_Minh" ]
   redis:
     image: redis:7.2
     container_name: redis
@@ -55,4 +70,5 @@ services:
 volumes:
   postgres_user_data:
   postgres_content_data:
+  postgres_learning_data:
   redis_data:

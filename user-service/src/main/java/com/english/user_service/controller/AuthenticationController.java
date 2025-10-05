@@ -1,7 +1,7 @@
 package com.english.user_service.controller;
 
 import com.english.user_service.dto.request.*;
-import com.english.dto.ApiResponse;
+import com.english.dto.response.*;
 import com.english.user_service.dto.response.VerifyOtpResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

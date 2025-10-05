@@ -2,10 +2,10 @@ package com.english.content_service.mapper;
 
 import com.english.content_service.dto.request.GrammarTestQuestionRequest;
 import com.english.content_service.dto.request.GrammarTestRequest;
-import com.english.content_service.dto.response.GrammarResponse;
-import com.english.content_service.dto.response.GrammarTestQuestionResponse;
-import com.english.content_service.dto.response.GrammarTestResponse;
-import com.english.content_service.dto.response.GrammarTopicResponse;
+import com.english.dto.response.GrammarResponse;
+import com.english.dto.response.GrammarTestQuestionResponse;
+import com.english.dto.response.GrammarTestResponse;
+import com.english.dto.response.GrammarTopicResponse;
 import com.english.content_service.entity.Grammar;
 import com.english.content_service.entity.GrammarTest;
 import com.english.content_service.entity.GrammarTestQuestion;

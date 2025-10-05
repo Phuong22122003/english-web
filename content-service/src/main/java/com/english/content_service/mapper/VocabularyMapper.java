@@ -8,10 +8,10 @@ import org.mapstruct.Mapping;
 
 import com.english.content_service.dto.request.VocabTopicRequest;
 import com.english.content_service.dto.request.VocabularyRequest;
-import com.english.content_service.dto.response.VocabTopicResponse;
-import com.english.content_service.dto.response.VocabularyResponse;
-import com.english.content_service.dto.response.VocabularyTestQuestionResponse;
-import com.english.content_service.dto.response.VocabularyTestResponse;
+import com.english.dto.response.VocabTopicResponse;
+import com.english.dto.response.VocabularyResponse;
+import com.english.dto.response.VocabularyTestQuestionResponse;
+import com.english.dto.response.VocabularyTestResponse;
 import com.english.content_service.entity.Vocabulary;
 import com.english.content_service.entity.VocabularyTest;
 import com.english.content_service.entity.VocabularyTestQuestion;

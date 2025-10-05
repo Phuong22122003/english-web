@@ -4,9 +4,8 @@ import java.util.List;
 import com.english.content_service.dto.request.VocabTopicRequest;
 import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
-import com.english.content_service.dto.response.*;
-import com.english.content_service.entity.Vocabulary;
 
+import com.english.dto.response.*;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,4 +28,5 @@ public interface VocabularyService {
     public GetTestsVocabByTopicIdResponse getTestsByTopicId(String topicId, int page, int size);
     public GetVocabularyTestQuestionResponse getTestQuestionsByTestId(String testId);
     public VocabularyTestResponse addTest(String topicId,VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles);
+    public List<VocabularyTestResponse> getTestsByIds(List<String> ids);
 }

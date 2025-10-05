@@ -6,7 +6,7 @@ import com.cloudinary.utils.ObjectUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.english.dto.FileResponse;
+import com.english.dto.response.FileResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
