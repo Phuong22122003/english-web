@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "listening")
 public class Listening {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @ManyToOne
