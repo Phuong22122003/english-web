@@ -22,7 +22,7 @@ public class ExamHistoryController {
         return ResponseEntity.ok().body(examHistoryService.addExamHistory(request));
     }
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<Page<ExamHistoryResponse>> getExamHistories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
