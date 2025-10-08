@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "vocabulary",url = "${app.services.content}")
+@FeignClient(name = "vocabulary",url = "${app.services.content}/vocabulary")
 public interface VocabularyClient {
-    @GetMapping("/vocabulary/tests")
+    @GetMapping("/tests")
     public List<VocabularyTestResponse> getTestsByIds(@RequestParam(name = "ids") List<String> ids);
     @GetMapping("/tests/{test_id}/questions")
     public GetVocabularyTestQuestionResponse getTestQuestionsByTestId(@PathVariable(name = "test_id") String testId);
