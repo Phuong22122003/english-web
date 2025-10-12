@@ -10,4 +10,6 @@ public interface PlanService {
     PlanResponse addPlan(PlanRequest request);
     Page<PlanResponse> getPlan(int page, int size);
     PlanResponse getPlanDetail(String planId);
+    void deletePlan(String planId);
+    PlanResponse editPlan(String planId, PlanRequest planRequest);
 }

@@ -14,5 +14,5 @@ public interface ListeningClient {
     @GetMapping("/tests")
     public List<ListeningTestReponse> getTestsByIds(@RequestParam(name = "ids") List<String> ids);
     @GetMapping("/tests/{test_id}")
-    public ListeningTestReponse getTestDetail(@PathVariable("test_id") String testId);
+    public com.english.learning_service.dto.response.ListeningTestReponse getTestDetail(@PathVariable("test_id") String testId);
 }

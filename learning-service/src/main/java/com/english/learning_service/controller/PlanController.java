@@ -51,4 +51,16 @@ public class PlanController {
         PlanResponse response = planService.getPlanDetail(planId);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePlan(@PathVariable("id") String planId) {
+        planService.deletePlan(planId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PlanResponse> editPlan(@PathVariable("id") String planId, @RequestBody PlanRequest request) {
+        PlanResponse response = planService.editPlan(planId, request);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -1,7 +1,7 @@
 package com.english.learning_service.httpclient;
 
-import com.english.dto.response.GetGrammarTestQuestionsByTestIdResponse;
 import com.english.dto.response.GrammarTestResponse;
+import com.english.learning_service.dto.response.GetGrammarTestQuestionsByTestIdResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

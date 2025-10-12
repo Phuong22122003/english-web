@@ -1,9 +1,13 @@
 package com.english.learning_service.service.implt;
 
+import com.english.exception.AppException;
 import com.english.exception.NotFoundException;
+import com.english.learning_service.dto.request.PlanGroupRequest;
 import com.english.learning_service.dto.request.PlanRequest;
+import com.english.learning_service.dto.response.PlanGroupResponse;
 import com.english.learning_service.dto.response.PlanResponse;
 import com.english.learning_service.entity.Plan;
+import com.english.learning_service.entity.PlanDetail;
 import com.english.learning_service.entity.PlanGroup;
 import com.english.learning_service.mapper.PlanMapper;
 import com.english.learning_service.repository.PlanDetailRepository;
@@ -22,10 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Slf4j
@@ -92,6 +93,90 @@ public class PlanServiceImplt implements PlanService {
             groupResponse.setPlanDetails(planMapper.toPlanDetailResponses(details));
             response.getPlanGroups().add(groupResponse);
         }
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public void deletePlan(String planId) {
+        // 1. Tìm plan theo ID
+        Plan plan = planRepository.findById(planId)
+                .orElseThrow(() -> AppException.builder()
+                        .code(404)
+                        .message("No plan was found")
+                        .build());
+
+        // 2. Lấy danh sách PlanGroup theo planId
+        List<PlanGroup> planGroups = planGroupRepository.findByPlanId(planId);
+
+        // 3. Xóa tất cả PlanDetail thuộc các PlanGroup này
+        for (PlanGroup pg : planGroups) {
+            List<PlanDetail> planDetails = planDetailRepository.findByPlanGroupId(pg.getId());
+            if (!planDetails.isEmpty()) {
+                planDetailRepository.deleteAll(planDetails);
+            }
+        }
+
+        // 4. Xóa các PlanGroup liên quan
+        if (!planGroups.isEmpty()) {
+            planGroupRepository.deleteAll(planGroups);
+        }
+
+        // 5. Cuối cùng xóa Plan
+        planRepository.delete(plan);
+    }
+
+    @Override
+    @Transactional
+    public PlanResponse editPlan(String planId, PlanRequest request) {
+        // 1️⃣ Lấy plan hiện tại
+        Plan plan = planRepository.findById(planId)
+                .orElseThrow(() -> AppException.builder()
+                        .code(404)
+                        .message("No plan was found")
+                        .build());
+
+        // 2️⃣ Cập nhật thông tin cơ bản
+        plan.setTitle(request.getTitle());
+        plan.setDescription(request.getDescription());
+        plan.setStartDate(request.getStartDate());
+        plan.setEndDate(request.getEndDate());
+        plan.setTarget(request.getTarget());
+        planRepository.save(plan);
+
+        // 3️⃣ Xóa toàn bộ nhóm và chi tiết cũ (để dễ xử lý)
+        List<PlanGroup> oldGroups = planGroupRepository.findByPlanId(planId);
+        for (PlanGroup oldGroup : oldGroups) {
+            List<PlanDetail> oldDetails = planDetailRepository.findByPlanGroupId(oldGroup.getId());
+            if (!oldDetails.isEmpty()) {
+                planDetailRepository.deleteAll(oldDetails);
+            }
+        }
+        if (!oldGroups.isEmpty()) {
+            planGroupRepository.deleteAll(oldGroups);
+        }
+
+        // 4️⃣ Thêm lại các nhóm và chi tiết mới theo request
+        List<PlanGroupResponse> groupResponses = new ArrayList<>();
+        for (PlanGroupRequest g : request.getPlanGroups()) {
+            PlanGroup group = planMapper.toPlanGroup(g);
+            group.setPlan(plan);
+            group = planGroupRepository.save(group);
+
+            List<PlanDetail> details = planMapper.toPlanDetails(g.getDetails());
+            for (PlanDetail d : details) {
+                d.setPlanGroup(group);
+            }
+            planDetailRepository.saveAll(details);
+
+            PlanGroupResponse groupResponse = planMapper.toPlanGroupResponse(group);
+            groupResponse.setPlanDetails(planMapper.toPlanDetailResponses(details));
+            groupResponses.add(groupResponse);
+        }
+
+        // 5️⃣ Trả về phản hồi sau khi cập nhật
+        PlanResponse response = planMapper.toPlanResponse(plan);
+        response.setPlanGroups(groupResponses);
         return response;
     }
 

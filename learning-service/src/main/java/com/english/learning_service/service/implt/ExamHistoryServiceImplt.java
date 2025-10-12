@@ -3,7 +3,10 @@ package com.english.learning_service.service.implt;
 import com.english.dto.response.*;
 import com.english.exception.NotFoundException;
 import com.english.learning_service.dto.request.ExamHistoryRequest;
+import com.english.learning_service.dto.request.UserAnswerRequest;
 import com.english.learning_service.dto.response.ExamHistoryResponse;
+import com.english.learning_service.dto.response.GetGrammarTestQuestionsByTestIdResponse;
+import com.english.learning_service.dto.response.GetVocabularyTestQuestionResponse;
 import com.english.learning_service.dto.response.QuestionResponse;
 import com.english.learning_service.entity.ExamHistory;
 import com.english.learning_service.entity.UserAnswer;
@@ -16,6 +19,7 @@ import com.english.learning_service.mapper.ExamHistoryMapper;
 import com.english.learning_service.repository.ExamHistoryRepository;
 import com.english.learning_service.repository.UserAnswerRepository;
 import com.english.learning_service.service.ExamHistoryService;
+import com.english.utilities.Common;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +27,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -48,8 +50,21 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
         ExamHistory examHistory = examHistoryMapper.toExamHistory(request);
+
         examHistory.setUserId(userId);
-        examHistoryRepository.save(examHistory);
+        ExamHistory savedEntity = examHistoryRepository.save(examHistory);
+        List<UserAnswer> userAnswers = new LinkedList<>();
+        for (UserAnswerRequest ua: request.getAnswers()) {
+            UserAnswer userAnswer = UserAnswer
+                    .builder()
+                    .selectedAnswer(ua.getSelectedAnswer())
+                    .examHistory(savedEntity)
+                    .isCorrect(ua.isCorrect())
+                    .questionId(ua.getQuestionId())
+                    .build();
+            userAnswers.add(userAnswer);
+        }
+        userAnswerRepository.saveAll(userAnswers);
         return examHistoryMapper.toExamHistoryResponse(examHistory);
     }
 
@@ -133,6 +148,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
         switch (examHistory.getTestType()){
             case ItemTypeEnum.VOCABULARY -> {
                 GetVocabularyTestQuestionResponse vocab = vocabularyClient.getTestQuestionsByTestId(examHistory.getTestId());
+                System.out.println(vocab);
                 examHistoryResponse.setName(vocab.getTestName());
                 examHistoryResponse.setDuration(vocab.getDuration());
                 for(var q: vocab.getQuestions()){
@@ -140,7 +156,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                                     .options(q.getOptions())
                                     .correctAnswer(q.getCorrectAnswer())
                                     .questionOrder(q.getQuestionOrder())
-                                    .userAnswer(idToAnswer.get(q.getId()).getSelectedAnswer())
+                                    .userAnswer(Common.getSafe(() -> idToAnswer.get(q.getId()).getSelectedAnswer(), null))
                                     .question(q.getQuestion())
                                     .explanation(q.getExplaination())
                             .build());
@@ -164,7 +180,7 @@ public class ExamHistoryServiceImplt implements ExamHistoryService {
                 break;
             }
             case ItemTypeEnum.LISTENING -> {
-                ListeningTestReponse listening = listeningClient.getTestDetail(examHistory.getTestId());
+                com.english.learning_service.dto.response.ListeningTestReponse listening = listeningClient.getTestDetail(examHistory.getTestId());
                 examHistoryResponse.setName(listening.getName());
                 examHistoryResponse.setDuration(listening.getDuration());
                 for(var q: listening.getQuestions()){

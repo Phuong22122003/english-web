@@ -19,5 +19,4 @@ public class PlanRequest {
     private LocalDateTime endDate;
     private Integer target;
     private List<PlanGroupRequest> planGroups;
-
 }
