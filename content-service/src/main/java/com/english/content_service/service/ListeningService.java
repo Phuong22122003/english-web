@@ -16,7 +16,7 @@ public interface ListeningService {
     //topic
     public Page<ListeningTopicResponse> getTopics(int page, int size);
     public ListeningTopicResponse addTopic(ListeningTopicRequest request, MultipartFile imageFile);
-
+    public List<ListeningTopicResponse> getTopicsByIds(List<String> ids);
     //listening
     public ListeningTopicResponse getListeningByTopic(String topicId);
     public List<ListeningResponse> addListeningList(String topicId, List<ListeningRequest> requests, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);

@@ -1,6 +1,7 @@
 package com.english.learning_service.httpclient;
 
 import com.english.dto.response.ListeningTestReponse;
+import com.english.dto.response.ListeningTopicResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,8 @@ import java.util.List;
 
 @FeignClient(name = "listening",url = "${app.services.content}/listening")
 public interface ListeningClient {
+    @GetMapping("/topics/ids")
+    public List<ListeningTopicResponse> getTopicsByIds(@RequestParam("ids") List<String> ids);
     @GetMapping("/tests")
     public List<ListeningTestReponse> getTestsByIds(@RequestParam(name = "ids") List<String> ids);
     @GetMapping("/tests/{test_id}")

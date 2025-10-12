@@ -34,6 +34,11 @@ public class ListeningController {
         return ResponseEntity.ok(listeningService.getTopics(page, size));
     }
 
+    @GetMapping("/topics/ids")
+    public ResponseEntity<?> getTopicsByIds(@RequestParam(name = "ids") List<String> ids){
+        return ResponseEntity.ok().body(listeningService.getTopicsByIds(ids));
+    }
+
     @PostMapping("/topics")
     public ResponseEntity<ListeningTopicResponse> addTopic(@RequestPart("topic") ListeningTopicRequest request,
                                                            @RequestPart("image") MultipartFile imageFile) {

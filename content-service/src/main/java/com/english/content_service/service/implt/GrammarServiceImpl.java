@@ -110,6 +110,12 @@ public class GrammarServiceImpl implements GrammarService {
     }
 
     @Override
+    public List<GrammarTopicResponse> getTopicsByIds(List<String> ids) {
+        List<GrammarTopic> topics = grammarTopicRepository.findAllById(ids);
+        return grammarMapper.toGrammarTopicResponses(topics);
+    }
+
+    @Override
     public GrammarResponse addGrammar(String topicId, GrammarRequest request) {
         GrammarTopic topic = this.grammarTopicRepository.findById(topicId).orElseThrow(()->new RuntimeException("Grammar topic not found"));
         Grammar grammar = Grammar

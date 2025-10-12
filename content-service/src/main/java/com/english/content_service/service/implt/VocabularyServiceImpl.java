@@ -120,6 +120,11 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
 
     @Override
+    public List<VocabTopicResponse> getTopicsByIds(List<String> ids) {
+        return vocabularyMapper.toVocabTopicResponses(vocabularyTopicRepository.findAllById(ids));
+    }
+
+    @Override
     public List<VocabularyResponse> addVocabularies(String topicId, List<VocabularyRequest> requests,
             List<MultipartFile> imageFiles, List<MultipartFile> audioFiles) {
         VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new RuntimeException("Topic not found"));

@@ -62,6 +62,12 @@ public class ListeningServiceImpl implements ListeningService {
     }
 
     @Override
+    public List<ListeningTopicResponse> getTopicsByIds(List<String> ids) {
+        List<ListeningTopic> topics = listeningTopicRepository.findAllById(ids);
+        return listeningMapper.toTopicResponses(topics);
+    }
+
+    @Override
     public ListeningTopicResponse getListeningByTopic(String topicId) {
         var topic = listeningTopicRepository.findById(topicId).orElseThrow(()->new RuntimeException("Topic Not found"));
         List<Listening> listeningList = listeningRepository.findByTopicId(topicId);

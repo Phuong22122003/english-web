@@ -32,6 +32,10 @@ public class VocabularyController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok().body(vocabularyService.getTopics(page, size));
     }
+    @GetMapping("/topics/ids")
+    public ResponseEntity<?> getTopicsByIds(@RequestParam(name = "ids") List<String> ids){
+        return ResponseEntity.ok().body(vocabularyService.getTopicsByIds(ids));
+    }
     @PostMapping("/topics")
     public ResponseEntity<VocabTopicResponse> createTopic(@RequestPart VocabTopicRequest topic, @RequestPart(required = false,name = "image") MultipartFile imageFile) {
         return ResponseEntity.ok().body(vocabularyService.addTopic(topic, imageFile));

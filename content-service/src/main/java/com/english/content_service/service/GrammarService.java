@@ -15,7 +15,7 @@ public interface GrammarService {
     //topic
     Page<GrammarTopicResponse> getTopics(int page, int size);
     GrammarTopicResponse addTopic(GrammarTopicRequest topic, MultipartFile imageFile);
-
+    List<GrammarTopicResponse> getTopicsByIds(List<String> ids);
     //grammar
     GetGrammarTopicResponse getGrammarsByTopicId(String topicId);
     GrammarResponse addGrammar(String topicId, GrammarRequest request);

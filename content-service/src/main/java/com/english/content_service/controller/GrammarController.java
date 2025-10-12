@@ -35,6 +35,10 @@ public class GrammarController {
     public ResponseEntity<GrammarTopicResponse> addTopic(@RequestPart(name = "topic") GrammarTopicRequest request, @RequestPart("image")MultipartFile image){
         return ResponseEntity.ok().body(grammarService.addTopic(request,image));
     }
+    @GetMapping("/topics/ids")
+    public ResponseEntity<?> getTopicsByIds(@RequestParam("ids") List<String> ids){
+        return ResponseEntity.ok().body(grammarService.getTopicsByIds(ids));
+    }
 
     //grammar
     @PostMapping("/{topic_id}/grammars")

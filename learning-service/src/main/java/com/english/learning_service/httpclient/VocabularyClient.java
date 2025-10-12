@@ -1,5 +1,6 @@
 package com.english.learning_service.httpclient;
 
+import com.english.dto.response.VocabTopicResponse;
 import com.english.dto.response.VocabularyTestResponse;
 import com.english.learning_service.configuration.FeignConfig;
 import com.english.learning_service.dto.response.GetVocabularyTestQuestionResponse;
@@ -13,6 +14,8 @@ import java.util.List;
 
 @FeignClient(name = "vocabulary",url = "${app.services.content}/vocabulary",  configuration = FeignConfig.class)
 public interface VocabularyClient {
+    @GetMapping("/topics/ids")
+    public List<VocabTopicResponse> getTopicsByIds(@RequestParam("ids") List<String> ids);
     @GetMapping("/tests")
     public List<VocabularyTestResponse> getTestsByIds(@RequestParam(name = "ids") List<String> ids);
     @GetMapping("/tests/{test_id}/questions")
