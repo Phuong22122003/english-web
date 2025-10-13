@@ -28,7 +28,7 @@ public interface VocabularyMapper {
     @Mapping(ignore = true, target = "createdAt")
     @Mapping(ignore = true, target = "imageUrl")
     VocabularyTopic toVocabTopic(VocabTopicRequest request);
-
+    void updateTopic(@MappingTarget VocabularyTopic topic, VocabTopicRequest request);
 
     // vocabulary
     @Mapping(target = "topicId", source = "topic.id")
@@ -57,4 +57,7 @@ public interface VocabularyMapper {
     List<VocabularyTestQuestionResponse> toVocabularyTestQuestionResponses(List<VocabularyTestQuestion> questions);
 
     List<VocabularyTestQuestion> toVocabularyTestQuestions(List<VocabularyTestQuestionRequest> requests);
+    VocabularyTestQuestion toVocabularyTestQuestion(VocabularyTestQuestionRequest request);
+    void updateVocabularyTestQuestion(@MappingTarget VocabularyTestQuestion question, VocabularyTestQuestionRequest request);
+
 }

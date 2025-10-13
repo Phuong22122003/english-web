@@ -39,6 +39,9 @@ public class FileService {
         }
     }
     public FileResponse uploadImage(MultipartFile file, String public_id) {
+        if(public_id==null){
+            return uploadImage(file);
+        }
         try {
             Map data = this.cloudinary.uploader().upload(file.getBytes(),ObjectUtils.asMap(
                         "public_id",public_id,

@@ -1,6 +1,7 @@
 package com.english.content_service.dto.request;
 
 import com.english.content_service.entity.Options;
+import com.english.enums.RequestType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VocabularyTestQuestionRequest {
+    private String id;
+
     private String question;
 
     private Options options;
@@ -18,4 +21,8 @@ public class VocabularyTestQuestionRequest {
     private Integer questionOrder;
 
     private String explaination;
+
+    private String imageName;
+
+    private RequestType action;
 }

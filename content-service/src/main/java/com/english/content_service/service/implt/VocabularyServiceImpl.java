@@ -1,15 +1,18 @@
 package com.english.content_service.service.implt;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.english.content_service.dto.request.VocabTopicRequest;
 import com.english.content_service.dto.request.VocabularyRequest;
+import com.english.content_service.dto.request.VocabularyTestQuestionRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
 import com.english.dto.response.*;
+import com.english.enums.RequestType;
 import com.english.exception.NotFoundException;
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,6 +38,7 @@ import org.springframework.data.domain.PageRequest;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class VocabularyServiceImpl implements VocabularyService {
     VocabularyTopicRepository vocabularyTopicRepository;
     VocabularyRepository vocabularyRepository;
@@ -105,16 +109,31 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
     @Override
     public VocabTopicResponse updateTopic(String topicId, VocabTopicRequest request, MultipartFile imageFile) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateTopic'");
+        VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new NotFoundException("Topic not found"));
+        vocabularyMapper.updateTopic(topic,request);
+        if(imageFile!=null&&!imageFile.isEmpty()){
+            FileResponse fileResponse;
+            if(topic.getPublicId()!=null){
+                fileResponse = fileService.uploadImage(imageFile,topic.getPublicId());
+            }else{
+                fileResponse = fileService.uploadImage(imageFile);
+            }
+            topic.setPublicId(fileResponse.getPublicId());
+            topic.setImageUrl(fileResponse.getUrl());
+        }
+        vocabularyTopicRepository.save(topic);
+        return vocabularyMapper.toVocabTopicResponse(topic);
     }
     @Override
+    @Transactional
     // admim
     // only delete new topic
     public void deleteTopic(String topicId) {
         VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId).orElseThrow(()->{
             return new NotFoundException("Topic not found");
         });
+        this.vocabularyTestQuestionRepository.deleteByTopicId(topicId);
+        this.vocabularyTestRepository.deleteByTopicId(topicId);
         this.vocabularyTopicRepository.deleteById(topicId);
         this.fileService.deleteFile(topic.getPublicId());
     }
@@ -125,6 +144,7 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
 
     @Override
+    @Transactional
     public List<VocabularyResponse> addVocabularies(String topicId, List<VocabularyRequest> requests,
             List<MultipartFile> imageFiles, List<MultipartFile> audioFiles) {
         VocabularyTopic topic = this.vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new RuntimeException("Topic not found"));
@@ -153,6 +173,137 @@ public class VocabularyServiceImpl implements VocabularyService {
         }
         return vocabularyMapper.toVocabularyResponses(vocabularies);
     }
+
+    @Override
+    @Transactional
+    public List<VocabularyResponse> updateVocabularies(
+            String topicId,
+            List<VocabularyRequest> requests,
+            List<MultipartFile> imageFiles,
+            List<MultipartFile> audioFiles
+    ) {
+        // ✅ 1. Lấy topic
+        VocabularyTopic topic = vocabularyTopicRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Topic not found"));
+
+        // ✅ 2. Ánh xạ file name -> file (image + audio)
+        Map<String, MultipartFile> fileMap = new HashMap<>();
+        if (imageFiles != null) {
+            for (MultipartFile file : imageFiles) {
+                if (file != null && !file.isEmpty()) {
+                    fileMap.put(file.getOriginalFilename(), file);
+                }
+            }
+        }
+        if (audioFiles != null) {
+            for (MultipartFile file : audioFiles) {
+                if (file != null && !file.isEmpty()) {
+                    fileMap.put(file.getOriginalFilename(), file);
+                }
+            }
+        }
+
+        // ✅ 3. Lấy các vocabulary cần update
+        Map<String, Vocabulary> idToVocab = vocabularyRepository
+                .findAllById(
+                        requests.stream()
+                                .map(VocabularyRequest::getId)
+                                .filter(Objects::nonNull)
+                                .toList()
+                )
+                .stream()
+                .collect(Collectors.toMap(Vocabulary::getId, v -> v));
+
+        // ✅ 4. Danh sách phục vụ xử lý
+        List<String> deleteIds = new ArrayList<>();
+        List<Vocabulary> toSave = new ArrayList<>();
+        List<String> uploadedFileIds = new ArrayList<>();
+
+        try {
+            for (VocabularyRequest req : requests) {
+                switch (req.getAction()) {
+                    case DELETE -> {
+                        String id = req.getId();
+                        if (id == null) break;
+
+                        deleteIds.add(id);
+
+                        // ✅ Tìm vocab để xóa file (có thể không nằm trong idToVocab)
+                        Vocabulary v = vocabularyRepository.findById(id).orElse(null);
+                        if (v != null) {
+                            try {
+                                if (v.getPublicImageId() != null) {
+                                    fileService.deleteFile(v.getPublicImageId());
+                                }
+                                if (v.getPublicAudioId() != null) {
+                                    fileService.deleteFile(v.getPublicAudioId());
+                                }
+                            } catch (Exception ex) {
+                                log.warn("⚠️ Failed to delete files for vocabulary {}: {}", id, ex.getMessage());
+                            }
+                        }
+                    }
+
+                    case UPDATE, ADD -> {
+                        Vocabulary vocab;
+
+                        // Nếu UPDATE thì lấy vocab hiện có, còn ADD thì tạo mới
+                        if (req.getAction() == RequestType.UPDATE && idToVocab.containsKey(req.getId())) {
+                            vocab = idToVocab.get(req.getId());
+                            vocabularyMapper.patchUpdate(vocab, req);
+                        } else {
+                            vocab = vocabularyMapper.toVocabulary(req);
+                            vocab.setTopic(topic);
+                            vocab.setCreatedAt(LocalDateTime.now());
+                        }
+
+                        // ✅ Xử lý upload hình ảnh (nếu có)
+                        if (req.getImageName() != null) {
+                            MultipartFile image = fileMap.get(req.getImageName());
+                            if (image != null && !image.isEmpty()) {
+                                FileResponse fileRes = fileService.uploadImage(image, vocab.getPublicImageId());
+                                vocab.setImageUrl(fileRes.getUrl());
+                                vocab.setPublicImageId(fileRes.getPublicId());
+                                uploadedFileIds.add(fileRes.getPublicId());
+                            }
+                        }
+
+                        // ✅ Xử lý upload audio (nếu có)
+                        if (req.getAudioName() != null) {
+                            MultipartFile audio = fileMap.get(req.getAudioName());
+                            if (audio != null && !audio.isEmpty()) {
+                                FileResponse fileRes = fileService.uploadAudio(audio, vocab.getPublicAudioId());
+                                vocab.setAudioUrl(fileRes.getUrl());
+                                vocab.setPublicAudioId(fileRes.getPublicId());
+                                uploadedFileIds.add(fileRes.getPublicId());
+                            }
+                        }
+
+                        toSave.add(vocab);
+                    }
+                }
+            }
+
+            // ✅ 5. Xóa vocab được đánh dấu DELETE
+            if (!deleteIds.isEmpty()) {
+                vocabularyRepository.deleteAllById(deleteIds);
+            }
+
+            // ✅ 6. Lưu vocab ADD + UPDATE
+            vocabularyRepository.saveAll(toSave);
+
+        } catch (Exception e) {
+            // ✅ Rollback file upload nếu lỗi
+            for (String id : uploadedFileIds) {
+                fileService.deleteFile(id);
+            }
+            throw e;
+        }
+
+        // ✅ 7. Trả về response
+        return vocabularyMapper.toVocabularyResponses(toSave);
+    }
+
     @Override
     public VocabularyResponse updateVocabulary(String vocabId, VocabularyRequest request, MultipartFile imageFile,
                                                MultipartFile audioFile) {
@@ -219,8 +370,121 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
 
     @Override
+    public VocabularyTestResponse updateTest(String testId, VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles) {
+        // Lấy bài test hiện tại
+        VocabularyTest test = vocabularyTestRepository.findById(testId)
+                .orElseThrow(() -> new NotFoundException("Test not found"));
+
+        // Cập nhật thông tin cơ bản của bài test
+        test.setName(vocabularyTestRequest.getName());
+        test.setDuration(vocabularyTestRequest.getDuration());
+
+        vocabularyTestRepository.save(test);
+
+        // Lấy danh sách câu hỏi hiện tại
+        List<VocabularyTestQuestion> existingQuestions = vocabularyTestQuestionRepository.findByTestId(test.getId());
+        Map<String, VocabularyTestQuestion> idToQuestion = new HashMap<>();
+        for (VocabularyTestQuestion q : existingQuestions) {
+            idToQuestion.put(q.getId(), q);
+        }
+
+        // Ánh xạ file ảnh theo tên file
+        Map<String, MultipartFile> nameToFile = new HashMap<>();
+        if (imageFiles != null) {
+            for (MultipartFile f : imageFiles) {
+                if (f != null && !f.isEmpty()) {
+                    nameToFile.put(f.getOriginalFilename(), f);
+                }
+            }
+        }
+
+        List<VocabularyTestQuestion> newQuestions = new ArrayList<>();
+        List<String> deleteIds = new ArrayList<>();
+        List<String> uploadedPublicIds = new ArrayList<>();
+
+        try {
+            for (VocabularyTestQuestionRequest req : vocabularyTestRequest.getQuestions()) {
+                switch (req.getAction()) {
+                    case DELETE -> {
+                        // Xóa câu hỏi
+                        VocabularyTestQuestion q = idToQuestion.get(req.getId());
+                        if (q != null && q.getPublicId() != null) {
+                            fileService.deleteFile(q.getPublicId());
+                        }
+                        deleteIds.add(req.getId());
+                    }
+                    case UPDATE -> {
+                        VocabularyTestQuestion existing = idToQuestion.get(req.getId());
+                        if (existing == null) continue;
+
+                        // Cập nhật nội dung cơ bản
+                        vocabularyMapper.updateVocabularyTestQuestion(existing, req);
+
+                        // Cập nhật ảnh nếu có
+                        if (req.getImageName() != null) {
+                            MultipartFile file = nameToFile.get(req.getImageName());
+                            if (file != null) {
+                                FileResponse fr;
+                                fr = fileService.uploadImage(file, existing.getPublicId());
+                                existing.setImageUrl(fr.getUrl());
+                                existing.setPublicId(fr.getPublicId());
+                                uploadedPublicIds.add(fr.getPublicId());
+                            }
+                        }
+
+                        newQuestions.add(existing);
+                    }
+                    case ADD -> {
+                        VocabularyTestQuestion newQ = vocabularyMapper.toVocabularyTestQuestion(req);
+                        newQ.setTest(test);
+
+                        if (req.getImageName() != null) {
+                            MultipartFile file = nameToFile.get(req.getImageName());
+                            if (file != null) {
+                                FileResponse fr = fileService.uploadImage(file);
+                                newQ.setImageUrl(fr.getUrl());
+                                newQ.setPublicId(fr.getPublicId());
+                                uploadedPublicIds.add(fr.getPublicId());
+                            }
+                        }
+
+                        newQuestions.add(newQ);
+                    }
+                }
+            }
+
+            // Xóa câu hỏi bị đánh dấu DELETE
+            if (!deleteIds.isEmpty()) {
+                vocabularyTestQuestionRepository.deleteAllById(deleteIds);
+            }
+
+            // Lưu thay đổi cho ADD và UPDATE
+            vocabularyTestQuestionRepository.saveAll(newQuestions);
+
+        } catch (Exception e) {
+            // rollback upload nếu lỗi
+            for (String pid : uploadedPublicIds) {
+                fileService.deleteFile(pid);
+            }
+            throw e;
+        }
+
+        // Trả về response
+        VocabularyTestResponse response = vocabularyMapper.toVocabularyTestResponse(test);
+        response.setQuestions(vocabularyMapper.toVocabularyTestQuestionResponses(newQuestions));
+        return response;
+    }
+
+    @Override
     public List<VocabularyTestResponse> getTestsByIds(List<String> ids) {
         List<VocabularyTest> tests = vocabularyTestRepository.findAllById(ids);
         return vocabularyMapper.toVocabularyTestResponses(tests);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTest(String testId) {
+        vocabularyTestQuestionRepository.deleteByTestId(testId);
+        vocabularyTestRepository.deleteById(testId);
     }
 }
