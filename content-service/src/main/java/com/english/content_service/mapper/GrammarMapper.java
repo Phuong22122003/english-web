@@ -10,8 +10,7 @@ import com.english.content_service.entity.Grammar;
 import com.english.content_service.entity.GrammarTest;
 import com.english.content_service.entity.GrammarTestQuestion;
 import com.english.content_service.entity.GrammarTopic;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 
 import java.util.List;
 
@@ -31,7 +30,6 @@ public interface GrammarMapper {
     @Mapping(target = "grammarId", source = "grammar.id")
     GrammarTestResponse toGrammarTestResponse(GrammarTest test);
     List<GrammarTestResponse> toGrammarTestResponses(List<GrammarTest> tests);
-
     GrammarTest toGrammarTest(GrammarTestRequest request);
 
     // Question
@@ -39,4 +37,10 @@ public interface GrammarMapper {
     GrammarTestQuestionResponse toGrammarTestQuestionResponse(GrammarTestQuestion question);
     List<GrammarTestQuestionResponse> toGrammarTestQuestionResponses(List<GrammarTestQuestion> questions);
     List<GrammarTestQuestion> toGrammarTestQuestion(List<GrammarTestQuestionRequest> requests);
+    GrammarTestQuestion toGrammarTestQuestion(GrammarTestQuestionRequest request);
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateGrammarTestQuestionPartial(
+            @MappingTarget GrammarTestQuestion question,
+            GrammarTestQuestionRequest request
+    );
 }

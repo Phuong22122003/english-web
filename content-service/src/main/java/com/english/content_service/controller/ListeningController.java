@@ -3,9 +3,7 @@ package com.english.content_service.controller;
 import com.english.content_service.dto.request.ListeningRequest;
 import com.english.content_service.dto.request.ListeningTestRequest;
 import com.english.content_service.dto.request.ListeningTopicRequest;
-import com.english.dto.response.ListeningResponse;
-import com.english.dto.response.ListeningTestReponse;
-import com.english.dto.response.ListeningTopicResponse;
+import com.english.dto.response.*;
 import com.english.content_service.service.ListeningService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +24,7 @@ public class ListeningController {
 
     ListeningService listeningService;
 
-    // ------------------- TOPIC -------------------
+    // ========================= TOPIC =========================
 
     @GetMapping("/topics")
     public ResponseEntity<?> getTopics(@RequestParam(defaultValue = "0") int page,
@@ -34,63 +32,108 @@ public class ListeningController {
         return ResponseEntity.ok(listeningService.getTopics(page, size));
     }
 
-    @GetMapping("/topics/ids")
-    public ResponseEntity<?> getTopicsByIds(@RequestParam(name = "ids") List<String> ids){
-        return ResponseEntity.ok().body(listeningService.getTopicsByIds(ids));
-    }
-
     @PostMapping("/topics")
-    public ResponseEntity<ListeningTopicResponse> addTopic(@RequestPart("topic") ListeningTopicRequest request,
-                                                           @RequestPart("image") MultipartFile imageFile) {
-        return ResponseEntity.ok(listeningService.addTopic(request, imageFile));
+    public ResponseEntity<ListeningTopicResponse> addTopic(
+            @RequestPart("topic") ListeningTopicRequest request,
+            @RequestPart("image") MultipartFile image) {
+        return ResponseEntity.ok(listeningService.addTopic(request, image));
     }
 
-    // ------------------- LISTENING -------------------
+    @PutMapping("/topics/{id}")
+    public ResponseEntity<ListeningTopicResponse> updateTopic(
+            @PathVariable("id") String topicId,
+            @RequestPart("topic") ListeningTopicRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.ok(listeningService.updateTopic(topicId, request, image));
+    }
+
+    @GetMapping("/topics/ids")
+    public ResponseEntity<?> getTopicsByIds(@RequestParam("ids") List<String> ids) {
+        return ResponseEntity.ok(listeningService.getTopicsByIds(ids));
+    }
+
+    @DeleteMapping("/topics/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteTopic(@PathVariable("id") String topicId) {
+        listeningService.deleteTopic(topicId);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .message("Deleted topic successfully")
+                .build());
+    }
+
+    // ========================= LISTENING =========================
 
     @GetMapping("/topics/{topic_id}/listenings")
-    public ResponseEntity<ListeningTopicResponse> getListeningsByTopic(@PathVariable("topic_id") String topicId) {
+    public ResponseEntity<?> getListeningsByTopic(@PathVariable("topic_id") String topicId) {
         return ResponseEntity.ok(listeningService.getListeningByTopic(topicId));
     }
 
     @PostMapping("/topics/{topic_id}/listenings")
-    public ResponseEntity<List<ListeningResponse>> addListeningList(
+    public ResponseEntity<?> addListeningList(
             @PathVariable("topic_id") String topicId,
             @RequestPart("requests") List<ListeningRequest> requests,
             @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
             @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
-
         return ResponseEntity.ok(listeningService.addListeningList(topicId, requests, imageFiles, audioFiles));
     }
 
-    // ------------------- TEST -------------------
+    @PutMapping("/listenings")
+    public ResponseEntity<?> updateListeningList(
+            @RequestPart("requests") List<ListeningRequest> requests,
+            @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
+            @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
+        return ResponseEntity.ok(listeningService.updateListening(requests, imageFiles, audioFiles));
+    }
 
-    // Lấy danh sách test theo topic
+    @DeleteMapping("/listenings/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteListening(@PathVariable("id") String listeningId) {
+        listeningService.deleteListening(listeningId);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .message("Deleted listening successfully")
+                .build());
+    }
+
+    // ========================= TEST =========================
+
     @GetMapping("/topics/{topic_id}/tests")
-    public ResponseEntity<ListeningTopicResponse> getTestsByTopic(@PathVariable("topic_id") String topicId,
-                                                                  @RequestParam(defaultValue = "0") int page,
-                                                                  @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<?> getTestsByTopic(@PathVariable("topic_id") String topicId,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(listeningService.getTestsByTopic(topicId, page, size));
     }
 
-    // Thêm test mới (có thể kèm image/audio cho từng câu hỏi)
     @PostMapping("/topics/{topic_id}/tests")
     public ResponseEntity<ListeningTestReponse> addTest(
             @PathVariable("topic_id") String topicId,
             @RequestPart("request") ListeningTestRequest request,
             @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
             @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
-
         return ResponseEntity.ok(listeningService.addTest(topicId, request, imageFiles, audioFiles));
     }
 
-    // Lấy chi tiết test
     @GetMapping("/tests/{test_id}")
     public ResponseEntity<ListeningTestReponse> getTestDetail(@PathVariable("test_id") String testId) {
         return ResponseEntity.ok(listeningService.getTestDetail(testId));
     }
 
     @GetMapping("/tests")
-    public ResponseEntity<?> getTestsByIds(@RequestParam(name = "ids") List<String> ids){
-        return ResponseEntity.ok().body(listeningService.getTestByIds(ids));
+    public ResponseEntity<?> getTestsByIds(@RequestParam("ids") List<String> ids) {
+        return ResponseEntity.ok(listeningService.getTestByIds(ids));
+    }
+
+    @PutMapping("/tests/{test_id}")
+    public ResponseEntity<ListeningTestReponse> updateTest(
+            @PathVariable("test_id") String testId,
+            @RequestPart("request") ListeningTestRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles,
+            @RequestPart(value = "audios", required = false) List<MultipartFile> audioFiles) {
+        return ResponseEntity.ok(listeningService.updateTest(testId, request, imageFiles, audioFiles));
+    }
+
+    @DeleteMapping("/tests/{test_id}")
+    public ResponseEntity<ApiResponse<String>> deleteTest(@PathVariable("test_id") String testId) {
+        listeningService.deleteTest(testId);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .message("Deleted test successfully")
+                .build());
     }
 }

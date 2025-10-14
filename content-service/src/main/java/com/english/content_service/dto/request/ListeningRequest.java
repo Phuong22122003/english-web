@@ -2,6 +2,7 @@ package com.english.content_service.dto.request;
 
 import com.english.content_service.entity.ListeningTopic;
 import com.english.content_service.entity.Options;
+import com.english.enums.RequestType;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -17,9 +18,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class ListeningRequest {
+    private String id;
     private String name;
     private String transcript;
     private String question;
     private Options options;
     private String correctAnswer;
+    private String imageName;
+    private String audioName;
+    private RequestType action;
 }

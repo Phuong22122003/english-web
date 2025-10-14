@@ -2,6 +2,7 @@ package com.english.content_service.repository;
 
 import com.english.content_service.entity.ListeningTestQuestion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -10,4 +11,7 @@ import java.util.List;
 public interface ListeningTestQuestionRepository extends JpaRepository<ListeningTestQuestion, String> {
     // Add custom query methods here if needed
     public List<ListeningTestQuestion> findByTestId(String testId);
+
+    @Modifying
+    public void deleteByTestId(String testId);
 }

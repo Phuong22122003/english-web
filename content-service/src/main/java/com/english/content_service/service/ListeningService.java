@@ -17,13 +17,18 @@ public interface ListeningService {
     public Page<ListeningTopicResponse> getTopics(int page, int size);
     public ListeningTopicResponse addTopic(ListeningTopicRequest request, MultipartFile imageFile);
     public List<ListeningTopicResponse> getTopicsByIds(List<String> ids);
+    public ListeningTopicResponse updateTopic(String topicId, ListeningTopicRequest request, MultipartFile multipartFile);
+    public void deleteTopic(String topicId);
     //listening
     public ListeningTopicResponse getListeningByTopic(String topicId);
     public List<ListeningResponse> addListeningList(String topicId, List<ListeningRequest> requests, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
-
+    public List<ListeningResponse> updateListening(List<ListeningRequest> requests, List<MultipartFile> imageFiles, List<MultipartFile> audioFiles);
+    public void deleteListening(String id);
     // test
     public ListeningTopicResponse getTestsByTopic(String topic,int page, int size);
     public ListeningTestReponse addTest(String topicId, ListeningTestRequest request, List<MultipartFile> imageFiles,List<MultipartFile> audioFiles);
     public ListeningTestReponse getTestDetail(String testId);
     public List<ListeningTestReponse> getTestByIds(List<String> ids);
+    public ListeningTestReponse updateTest(String testId, ListeningTestRequest request,List<MultipartFile> imageFiles,List<MultipartFile> audioFiles);
+    public void deleteTest(String testId);
 }

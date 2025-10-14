@@ -3,15 +3,14 @@ package com.english.content_service.controller;
 import com.english.content_service.dto.request.GrammarRequest;
 import com.english.content_service.dto.request.GrammarTestRequest;
 import com.english.content_service.dto.request.GrammarTopicRequest;
-import com.english.dto.response.GrammarTopicResponse;
+import com.english.dto.response.*;
 import com.english.content_service.service.GrammarService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -25,34 +24,72 @@ public class GrammarController {
 
     GrammarService grammarService;
 
-    //grammar topic
+    // ========================= TOPIC =========================
+
     @GetMapping("/topics")
     public ResponseEntity<?> getTopics(@RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "10") int size) {
+                                       @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(grammarService.getTopics(page, size));
     }
+
     @PostMapping("/topics")
-    public ResponseEntity<GrammarTopicResponse> addTopic(@RequestPart(name = "topic") GrammarTopicRequest request, @RequestPart("image")MultipartFile image){
-        return ResponseEntity.ok().body(grammarService.addTopic(request,image));
+    public ResponseEntity<GrammarTopicResponse> addTopic(
+            @RequestPart("topic") GrammarTopicRequest request,
+            @RequestPart("image") MultipartFile image) {
+        return ResponseEntity.ok(grammarService.addTopic(request, image));
     }
+
+    @PutMapping("/topics/{id}")
+    public ResponseEntity<GrammarTopicResponse> updateTopic(
+            @PathVariable String id,
+            @RequestPart("topic") GrammarTopicRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.ok(grammarService.updateTopic(id, request, image));
+    }
+
     @GetMapping("/topics/ids")
-    public ResponseEntity<?> getTopicsByIds(@RequestParam("ids") List<String> ids){
-        return ResponseEntity.ok().body(grammarService.getTopicsByIds(ids));
+    public ResponseEntity<?> getTopicsByIds(@RequestParam("ids") List<String> ids) {
+        return ResponseEntity.ok(grammarService.getTopicsByIds(ids));
     }
 
-    //grammar
-    @PostMapping("/{topic_id}/grammars")
-    public ResponseEntity<?> addGrammar(@PathVariable(name = "topic_id") String topicId, @RequestBody GrammarRequest grammar){
-        return ResponseEntity.ok().body(grammarService.addGrammar(topicId,grammar));
+    @DeleteMapping("/topics/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteTopicById(@PathVariable String id) {
+        grammarService.deleteTopicById(id);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .message("Deleted topic successfully")
+                .build());
     }
 
-    @GetMapping("/{grammar_id}")
-    public ResponseEntity<?> getGrammarById(@PathVariable("grammar_id") String grammarId) {
-        return ResponseEntity.ok(grammarService.getGrammarsByTopicId(grammarId));
+    // ========================= GRAMMAR =========================
+
+    @GetMapping("/topics/{topic_id}/grammars")
+    public ResponseEntity<?> getGrammarsByTopicId(@PathVariable("topic_id") String topicId) {
+        return ResponseEntity.ok(grammarService.getGrammarsByTopicId(topicId));
     }
 
-    //test
-    @GetMapping("/{grammar_id}/tests")
+    @PostMapping("/topics/{topic_id}/grammars")
+    public ResponseEntity<?> addGrammar(@PathVariable("topic_id") String topicId,
+                                        @RequestBody GrammarRequest grammarRequest) {
+        return ResponseEntity.ok(grammarService.addGrammar(topicId, grammarRequest));
+    }
+
+    @PutMapping("/grammars/{grammar_id}")
+    public ResponseEntity<?> updateGrammar(@PathVariable("grammar_id") String grammarId,
+                                           @RequestBody GrammarRequest request) {
+        return ResponseEntity.ok(grammarService.updateGrammar(grammarId, request));
+    }
+
+    @DeleteMapping("/grammars/{grammar_id}")
+    public ResponseEntity<ApiResponse<String>> deleteGrammarById(@PathVariable("grammar_id") String grammarId) {
+        grammarService.deleteGrammarById(grammarId);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .message("Deleted grammar successfully")
+                .build());
+    }
+
+    // ========================= TEST =========================
+
+    @GetMapping("/grammars/{grammar_id}/tests")
     public ResponseEntity<?> getTestsByGrammarId(@PathVariable("grammar_id") String grammarId,
                                                  @RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "10") int size) {
@@ -64,12 +101,28 @@ public class GrammarController {
         return ResponseEntity.ok(grammarService.getTestQuestionsByTestId(testId));
     }
 
-    @PostMapping("/tests/{topic_id}")
-    public ResponseEntity<?> addTest(@PathVariable(name = "topic_id") String topicId, @RequestBody GrammarTestRequest testRequest){
-        return ResponseEntity.ok().body(grammarService.addTest(topicId,testRequest));
+    @PostMapping("/grammars/{grammar_id}/tests")
+    public ResponseEntity<?> addTest(@PathVariable("grammar_id") String grammarId,
+                                     @RequestBody GrammarTestRequest testRequest) {
+        return ResponseEntity.ok(grammarService.addTest(grammarId, testRequest));
     }
+
+    @PutMapping("/tests/{test_id}")
+    public ResponseEntity<?> updateGrammarTest(@PathVariable("test_id") String testId,
+                                               @RequestBody GrammarTestRequest request) {
+        return ResponseEntity.ok(grammarService.updateGrammarTest(testId, request));
+    }
+
+    @DeleteMapping("/tests/{test_id}")
+    public ResponseEntity<ApiResponse<String>> deleteTestById(@PathVariable("test_id") String testId) {
+        grammarService.deleteTestById(testId);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .message("Deleted test successfully")
+                .build());
+    }
+
     @GetMapping("/tests")
-    public ResponseEntity<?> getTestsByIds(@RequestParam(name = "ids") List<String> ids){
-        return ResponseEntity.ok().body(grammarService.getTestsByIds(ids));
+    public ResponseEntity<?> getTestsByIds(@RequestParam("ids") List<String> ids) {
+        return ResponseEntity.ok(grammarService.getTestsByIds(ids));
     }
 }

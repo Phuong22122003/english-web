@@ -3,6 +3,8 @@ package com.english.content_service.service.implt;
 import com.english.content_service.dto.request.ListeningRequest;
 import com.english.content_service.dto.request.ListeningTestRequest;
 import com.english.content_service.dto.request.ListeningTopicRequest;
+import com.english.content_service.entity.ListeningTestQuestion;
+import com.english.dto.response.FileResponse;
 import com.english.dto.response.ListeningResponse;
 import com.english.dto.response.ListeningTestReponse;
 import com.english.dto.response.ListeningTopicResponse;
@@ -14,23 +16,27 @@ import com.english.content_service.repository.ListeningRepository;
 import com.english.content_service.repository.ListeningTestQuestionRepository;
 import com.english.content_service.repository.ListeningTestRepository;
 import com.english.content_service.repository.ListeningTopicRepository;
+import com.english.enums.RequestType;
 import com.english.exception.NotFoundException;
 import com.english.service.FileService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.redis.listener.Topic;
 import org.springframework.stereotype.Service;
 import com.english.content_service.service.ListeningService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -65,6 +71,31 @@ public class ListeningServiceImpl implements ListeningService {
     public List<ListeningTopicResponse> getTopicsByIds(List<String> ids) {
         List<ListeningTopic> topics = listeningTopicRepository.findAllById(ids);
         return listeningMapper.toTopicResponses(topics);
+    }
+
+    @Override
+    public ListeningTopicResponse updateTopic(String topicId, ListeningTopicRequest request, MultipartFile imageFile){
+        ListeningTopic topic = listeningTopicRepository.findById(topicId).orElseThrow(()->new NotFoundException("Topic not found"));
+        listeningMapper.updateTopic(topic,request);
+        if(imageFile!=null&&!imageFile.isEmpty()){
+            FileResponse fileResponse = fileService.uploadImage(imageFile,topic.getPublicId());
+            topic.setImageUrl(fileResponse.getUrl());
+            topic.setPublicId(fileResponse.getPublicId());
+        }
+        listeningTopicRepository.save(topic);
+        return listeningMapper.toTopicResponse(topic);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTopic(String topicId) {
+        List<ListeningTest> tests = listeningTestRepository.findAllByTopicId(topicId);
+        for(var t: tests){
+            deleteTest(t.getId());
+        }
+        ListeningTopic topic = listeningTopicRepository.findById(topicId).orElseThrow(()-> new NotFoundException("Topic not found"));
+        listeningTopicRepository.delete(topic);
+        if(topic.getPublicId()!=null) fileService.deleteFile(topic.getPublicId());
     }
 
     @Override
@@ -130,11 +161,136 @@ public class ListeningServiceImpl implements ListeningService {
     }
 
     @Override
+    @Transactional
+    public List<ListeningResponse> updateListening(
+            List<ListeningRequest> requests,
+            List<MultipartFile> imageFiles,
+            List<MultipartFile> audioFiles) {
+
+        // 1️⃣ Ánh xạ file theo tên file
+        Map<String, MultipartFile> fileMap = new HashMap<>();
+        if (imageFiles != null) {
+            for (MultipartFile file : imageFiles) {
+                if (file != null && !file.isEmpty()) {
+                    fileMap.put(file.getOriginalFilename(), file);
+                }
+            }
+        }
+        if (audioFiles != null) {
+            for (MultipartFile file : audioFiles) {
+                if (file != null && !file.isEmpty()) {
+                    fileMap.put(file.getOriginalFilename(), file);
+                }
+            }
+        }
+
+        // 2️⃣ Lấy danh sách các listening hiện có (nếu có id)
+        Map<String, Listening> idToListening = listeningRepository
+                .findAllById(
+                        requests.stream()
+                                .map(ListeningRequest::getId)
+                                .filter(Objects::nonNull)
+                                .toList()
+                )
+                .stream()
+                .collect(Collectors.toMap(Listening::getId, l -> l));
+
+        // 3️⃣ Chuẩn bị danh sách thao tác
+        List<String> deleteIds = new ArrayList<>();
+        List<Listening> toSave = new ArrayList<>();
+        List<String> uploadedFileIds = new ArrayList<>();
+
+        try {
+            for (ListeningRequest req : requests) {
+                switch (req.getAction()) {
+                    case DELETE -> {
+                        String id = req.getId();
+                        if (id == null) break;
+
+                        deleteIds.add(id);
+                        Listening listening = idToListening.get(id);
+                        if (listening != null) {
+                            if (listening.getPublicImageId() != null)
+                                fileService.deleteFile(listening.getPublicImageId());
+                            if (listening.getPublicAudioId() != null)
+                                fileService.deleteFile(listening.getPublicAudioId());
+                        }
+                    }
+
+                    case UPDATE, ADD -> {
+                        Listening entity;
+
+                        if (req.getAction() == RequestType.UPDATE && idToListening.containsKey(req.getId())) {
+                            entity = idToListening.get(req.getId());
+                            listeningMapper.patchUpdateListening(entity, req);
+                        } else {
+                            entity = listeningMapper.toListeningEnty(req);
+                            entity.setCreatedAt(LocalDateTime.now());
+                        }
+
+                        // ✅ Upload image nếu có
+                        if (req.getImageName() != null) {
+                            MultipartFile img = fileMap.get(req.getImageName());
+                            if (img != null) {
+                                FileResponse fr = fileService.uploadImage(img, entity.getPublicImageId());
+                                entity.setImageUrl(fr.getUrl());
+                                entity.setPublicImageId(fr.getPublicId());
+                                uploadedFileIds.add(fr.getPublicId());
+                            }
+                        }
+
+                        // ✅ Upload audio nếu có
+                        if (req.getAudioName() != null) {
+                            MultipartFile audio = fileMap.get(req.getAudioName());
+                            if (audio != null) {
+                                FileResponse fr = fileService.uploadAudio(audio, entity.getPublicAudioId());
+                                entity.setAudioUrl(fr.getUrl());
+                                entity.setPublicAudioId(fr.getPublicId());
+                                uploadedFileIds.add(fr.getPublicId());
+                            }
+                        }
+
+                        toSave.add(entity);
+                    }
+                }
+            }
+
+            // 4️⃣ Xóa các bản ghi DELETE
+            if (!deleteIds.isEmpty()) {
+                listeningRepository.deleteAllById(deleteIds);
+            }
+
+            // 5️⃣ Lưu các bản ghi ADD/UPDATE
+            listeningRepository.saveAll(toSave);
+
+        } catch (Exception e) {
+            for (String pid : uploadedFileIds) {
+                fileService.deleteFile(pid);
+            }
+            throw e;
+        }
+
+        return listeningMapper.toListeningResponse(toSave);
+    }
+
+
+    @Override
+    public void deleteListening(String id) {
+        Listening listening = listeningRepository.findById(id).orElseThrow(()->new NotFoundException("Listening not found"));
+        if(listening.getPublicAudioId()!=null){
+            fileService.deleteFile(listening.getPublicAudioId());
+        }
+        if(listening.getPublicImageId()!=null){
+            fileService.deleteFile(listening.getPublicImageId());
+        }
+    }
+
+    @Override
     public ListeningTopicResponse getTestsByTopic(String topicId, int page, int size) {
         var topic = listeningTopicRepository.findById(topicId).orElseThrow(()->new RuntimeException("Topic Not found"));
         Page<ListeningTest> listeningTestPage = listeningTestRepository.findTestsByTopicId(topicId, PageRequest.of(page,size));
 
-        var listeningTests = listeningMapper.toTestReponses(listeningTestPage.getContent());
+        var listeningTests = listeningMapper.toTestResponses(listeningTestPage.getContent());
         Page<ListeningTestReponse> testReponses = new PageImpl<>(listeningTests,PageRequest.of(page,size),listeningTestPage.getTotalElements());
         var topicReponse = listeningMapper.toTopicResponse(topic);
         topicReponse.setTests(testReponses);
@@ -198,7 +354,7 @@ public class ListeningServiceImpl implements ListeningService {
         }
 
         // 5. map về response
-        ListeningTestReponse response = listeningMapper.toTestReponse(test);
+        ListeningTestReponse response = listeningMapper.toTestResponse(test);
         response.setQuestions(listeningMapper.toTestQuestionResponses(questions));
 
         return response;
@@ -214,7 +370,7 @@ public class ListeningServiceImpl implements ListeningService {
         var questions = listeningTestQuestionRepository.findByTestId(testId);
 
         // 3. map sang response
-        ListeningTestReponse response = listeningMapper.toTestReponse(test);
+        ListeningTestReponse response = listeningMapper.toTestResponse(test);
         response.setQuestions(listeningMapper.toTestQuestionResponses(questions));
 
         return response;
@@ -223,8 +379,155 @@ public class ListeningServiceImpl implements ListeningService {
     @Override
     public List<ListeningTestReponse> getTestByIds(List<String> ids) {
         List<ListeningTest> tests = listeningTestRepository.findAllById(ids);
-        return listeningMapper.toTestReponses(tests);
+        return listeningMapper.toTestResponses(tests);
     }
 
+    @Override
+    @Transactional
+    public ListeningTestReponse updateTest(
+            String testId,
+            ListeningTestRequest request,
+            List<MultipartFile> imageFiles,
+            List<MultipartFile> audioFiles) {
+
+        // 1️⃣ Lấy test hiện tại
+        ListeningTest test = listeningTestRepository.findById(testId)
+                .orElseThrow(() -> new NotFoundException("Test not found"));
+
+        test.setName(request.getName());
+        test.setDuration(request.getDuration());
+        listeningTestRepository.save(test);
+
+        // 2️⃣ Lấy các câu hỏi hiện tại
+        List<ListeningTestQuestion> existingQuestions = listeningTestQuestionRepository.findByTestId(testId);
+        Map<String, ListeningTestQuestion> idToQuestion = existingQuestions.stream()
+                .collect(Collectors.toMap(ListeningTestQuestion::getId, q -> q));
+
+        // 3️⃣ Ánh xạ file
+        Map<String, MultipartFile> fileMap = new HashMap<>();
+        if (imageFiles != null) {
+            for (MultipartFile file : imageFiles) {
+                if (file != null && !file.isEmpty())
+                    fileMap.put(file.getOriginalFilename(), file);
+            }
+        }
+        if (audioFiles != null) {
+            for (MultipartFile file : audioFiles) {
+                if (file != null && !file.isEmpty())
+                    fileMap.put(file.getOriginalFilename(), file);
+            }
+        }
+
+        List<ListeningTestQuestion> toSave = new ArrayList<>();
+        List<String> deleteIds = new ArrayList<>();
+        List<String> uploadedPublicIds = new ArrayList<>();
+
+        try {
+            for (var req : request.getQuestions()) {
+                switch (req.getAction()) {
+                    case DELETE -> {
+                        ListeningTestQuestion q = idToQuestion.get(req.getId());
+                        if (q != null) {
+                            if (q.getPublicImageId() != null) fileService.deleteFile(q.getPublicImageId());
+                            if (q.getPublicAudioId() != null) fileService.deleteFile(q.getPublicAudioId());
+                            deleteIds.add(req.getId());
+                        }
+                    }
+
+                    case UPDATE -> {
+                        ListeningTestQuestion q = idToQuestion.get(req.getId());
+                        if (q == null) continue;
+
+                        listeningMapper.updateListeningTestQuestion(q, req);
+
+                        if (req.getImageName() != null) {
+                            MultipartFile image = fileMap.get(req.getImageName());
+                            if (image != null) {
+                                FileResponse fr = fileService.uploadImage(image, q.getPublicImageId());
+                                q.setImageUrl(fr.getUrl());
+                                q.setPublicImageId(fr.getPublicId());
+                                uploadedPublicIds.add(fr.getPublicId());
+                            }
+                        }
+
+                        if (req.getAudioName() != null) {
+                            MultipartFile audio = fileMap.get(req.getAudioName());
+                            if (audio != null) {
+                                FileResponse fr = fileService.uploadAudio(audio, q.getPublicAudioId());
+                                q.setAudioUrl(fr.getUrl());
+                                q.setPublicAudioId(fr.getPublicId());
+                                uploadedPublicIds.add(fr.getPublicId());
+                            }
+                        }
+
+                        toSave.add(q);
+                    }
+
+                    case ADD -> {
+                        ListeningTestQuestion newQ = listeningMapper.toTestQuestion(req);
+                        newQ.setTest(test);
+
+                        if (req.getImageName() != null) {
+                            MultipartFile image = fileMap.get(req.getImageName());
+                            if (image != null) {
+                                FileResponse fr = fileService.uploadImage(image);
+                                newQ.setImageUrl(fr.getUrl());
+                                newQ.setPublicImageId(fr.getPublicId());
+                                uploadedPublicIds.add(fr.getPublicId());
+                            }
+                        }
+
+                        if (req.getAudioName() != null) {
+                            MultipartFile audio = fileMap.get(req.getAudioName());
+                            if (audio != null) {
+                                FileResponse fr = fileService.uploadAudio(audio);
+                                newQ.setAudioUrl(fr.getUrl());
+                                newQ.setPublicAudioId(fr.getPublicId());
+                                uploadedPublicIds.add(fr.getPublicId());
+                            }
+                        }
+
+                        toSave.add(newQ);
+                    }
+                }
+            }
+
+            if (!deleteIds.isEmpty()) {
+                listeningTestQuestionRepository.deleteAllById(deleteIds);
+            }
+
+            listeningTestQuestionRepository.saveAll(toSave);
+
+        } catch (Exception e) {
+            for (String pid : uploadedPublicIds) {
+                fileService.deleteFile(pid);
+            }
+            throw e;
+        }
+
+        // 4️⃣ Map response
+        ListeningTestReponse response = listeningMapper.toTestResponse(test);
+        response.setQuestions(listeningMapper.toTestQuestionResponses(toSave));
+        return response;
+    }
+
+
+    @Override
+    @Transactional
+    public void deleteTest(String testId) {
+        List<ListeningTestQuestion> questions = listeningTestQuestionRepository.findByTestId(testId);
+        try{
+            for(var q: questions){
+                if(q.getPublicAudioId()!=null)
+                    fileService.deleteFile(q.getPublicAudioId());
+                if(q.getPublicImageId()!=null)
+                    fileService.deleteFile(q.getPublicImageId());
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        listeningTestQuestionRepository.deleteByTestId(testId);
+        listeningTestRepository.deleteById(testId);
+    }
 
 }
