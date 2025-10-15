@@ -1,5 +1,0 @@
-com\english\Main.class
-com\english\dto\AppResponse.class
-com\english\dto\FileResponse.class
-com\english\dto\AppResponse$AppResponseBuilder.class
-com\english\service\FileService.class
