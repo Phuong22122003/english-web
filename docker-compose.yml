@@ -66,9 +66,10 @@ services:
       - "6333:6333"   # REST API
       - "6334:6334"   # gRPC
     volumes:
-      - ./qdrant_storage:/qdrant/storage  # map volume để lưu dữ liệu
+      - qdrant_storage:/qdrant/storage  # map volume để lưu dữ liệu
 volumes:
   postgres_user_data:
   postgres_content_data:
   postgres_learning_data:
   redis_data:
+  qdrant_storage:

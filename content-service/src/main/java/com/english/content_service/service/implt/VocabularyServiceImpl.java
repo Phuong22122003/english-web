@@ -134,8 +134,10 @@ public class VocabularyServiceImpl implements VocabularyService {
         });
         this.vocabularyTestQuestionRepository.deleteByTopicId(topicId);
         this.vocabularyTestRepository.deleteByTopicId(topicId);
-        this.vocabularyTopicRepository.deleteById(topicId);
+        this.vocabularyTopicRepository.delete(topic);
         this.fileService.deleteFile(topic.getPublicId());
+        List<String> publicIds = vocabularyTestQuestionRepository.findAllPublicIdsByTopicId(topicId);
+        fileService.deleteFiles(publicIds);
     }
 
     @Override
@@ -328,8 +330,16 @@ public class VocabularyServiceImpl implements VocabularyService {
         return vocabularyMapper.toVocabularyResponse(vocabulary);
     }
     @Override
+    @Transactional
     public void deleteVocabulary(String vocabId) {
-        this.vocabularyRepository.deleteById(vocabId);
+        Vocabulary vocabulary = vocabularyRepository.findById(vocabId).orElseThrow(()->new NotFoundException("Vocabulary not found"));
+        this.vocabularyRepository.delete(vocabulary);
+        if (vocabulary.getPublicAudioId() != null) {
+            fileService.deleteFile(vocabulary.getPublicAudioId());
+        }
+        if(vocabulary.getPublicImageId()!=null){
+            fileService.deleteFile(vocabulary.getPublicImageId());
+        }
     }
 
     @Override
@@ -484,7 +494,12 @@ public class VocabularyServiceImpl implements VocabularyService {
     @Override
     @Transactional
     public void deleteTest(String testId) {
+        List<VocabularyTestQuestion> questions = vocabularyTestQuestionRepository.findByTestId(testId);
         vocabularyTestQuestionRepository.deleteByTestId(testId);
         vocabularyTestRepository.deleteById(testId);
+        for(var q: questions){
+            if(q.getPublicId()!=null)
+                fileService.deleteFile(q.getPublicId());
+        }
     }
 }

@@ -19,4 +19,7 @@ public interface VocabularyTestQuestionRepository extends JpaRepository<Vocabula
 
     @Modifying
     public void deleteByTestId(String testId);
+
+    @Query("SELECT q.publicId From VocabularyTestQuestion q where q.test.topic.id=:topicId AND q.publicId is not null")
+    public List<String>  findAllPublicIdsByTopicId(String topicId);
 }

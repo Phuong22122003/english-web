@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.english.dto.response.FileResponse;
@@ -93,6 +94,11 @@ public class FileService {
         }
         catch(Exception ex){
             throw new RuntimeException("Can not delete file");
+        }
+    }
+    public void deleteFiles(List<String> publicIds){
+        for(String id: publicIds){
+            deleteFile(id);
         }
     }
 }
