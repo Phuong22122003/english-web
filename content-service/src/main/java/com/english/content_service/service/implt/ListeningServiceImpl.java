@@ -465,6 +465,7 @@ public class ListeningServiceImpl implements ListeningService {
 
                     case ADD -> {
                         ListeningTestQuestion newQ = listeningMapper.toTestQuestion(req);
+                        newQ.setId(null);
                         newQ.setTest(test);
 
                         if (req.getImageName() != null) {
