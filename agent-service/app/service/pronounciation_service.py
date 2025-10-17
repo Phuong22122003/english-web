@@ -183,7 +183,7 @@ class PronounciationService:
         i = 0
         for ipa_char in ipa_li:
             if ipa_char in [' ', "ˈ", 'ˌ']:
-                detail_scores.append({ipa_char: 1.0})
+                detail_scores.append({ipa_char: 100})
             else:
                 conf = results[i]['confidence']
                 detail_scores.append({results[i]['char']: conf})
