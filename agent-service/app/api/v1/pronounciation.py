@@ -7,7 +7,7 @@ import io
 router = APIRouter()
 pronoun_service = PronounciationService()
 
-@router.post("/pronunciation")
+@router.post("/pronounciation")
 async def check_pronunciation(file:UploadFile=File(...), text:str=Form(...)):
     # Đọc toàn bộ bytes từ UploadFile
     audio_bytes = await file.read()
