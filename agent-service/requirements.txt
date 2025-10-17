@@ -9,3 +9,7 @@ sentence-transformers
 langgraph
 soundfile
 transformers
+google-genai
+eng_to_ipa
+torchaudio
+python-multipart
