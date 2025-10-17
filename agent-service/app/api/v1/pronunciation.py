@@ -65,6 +65,6 @@ async def check_pronunciation(file:UploadFile=File(...), text:str=Form(...)):
     samplerate = audio.frame_rate  # sẽ là 16000 theo set_frame_rate
     # Xuất ra file WAV
     text = text.strip()
-    # result = pronoun_service.get_ipa_confidence(text_correct=text,audio_array=audio_array,sample_rate = samplerate)
+    result = pronoun_service.get_ipa_confidence(text_correct=text,audio_array=audio_array,sample_rate = samplerate)
 
-    return 'result'
+    return result
