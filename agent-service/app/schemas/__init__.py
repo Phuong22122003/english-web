@@ -1,2 +1,2 @@
 from .topic import *
-from .pronounciation import *
+from .pronunciation import *

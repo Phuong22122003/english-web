@@ -36,20 +36,35 @@ def get_pronunciation(text:str):
     })
     
     
+import io
+import wave
+
+import numpy as np
+import scipy.io.wavfile
+import soundfile as sf
+from scipy.io.wavfile import write
+
+from pydub import AudioSegment
+import numpy as np
+import io
+import soundfile as sf
+
+
 @router.post("/pronunciation")
 async def check_pronunciation(file:UploadFile=File(...), text:str=Form(...)):
     # Đọc toàn bộ bytes từ UploadFile
     audio_bytes = await file.read()
 
-    # Dùng BytesIO để đọc như file trong bộ nhớ
+    # # Dùng BytesIO để đọc như file trong bộ nhớ
     audio_io = io.BytesIO(audio_bytes)
-
-    # Đọc âm thanh trực tiếp thành numpy array
-    audio_array, samplerate = sf.read(audio_io)
-
-    # Chuyển lại con trỏ BytesIO về đầu để Whisper đọc tiếp
-    audio_io.seek(0)
+    
+    audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
+    audio = audio.set_channels(1).set_frame_rate(16000)
+    
+    audio_array = np.array(audio.get_array_of_samples())
+    samplerate = audio.frame_rate  # sẽ là 16000 theo set_frame_rate
+    # Xuất ra file WAV
     text = text.strip()
-    result = pronoun_service.get_ipa_confidence(text_correct=text,audio_array=audio_array,sample_rate = samplerate)
+    # result = pronoun_service.get_ipa_confidence(text_correct=text,audio_array=audio_array,sample_rate = samplerate)
 
-    return result
+    return 'result'

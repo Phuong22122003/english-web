@@ -74,7 +74,20 @@ class PronounciationService:
         
         if alignment_result is None:
             print("LLM determined sequences are too different. Cannot align.\n")
-            return None
+            correct_ipa = ipa.convert(text_correct)
+            print(f'corrrect ipa {correct_ipa}')
+            ipa_li = list(correct_ipa)
+            detail_scores = []
+            total = 0.0
+
+            if results is None:
+                detail_scores = [{ipa: 0.0} for ipa in ipa_li]
+                return {
+                    'message': 'hello',
+                    'score': 0.0,
+                    'ipa': correct_ipa,
+                    'detail_scores': detail_scores
+                }
         
         print(f"LLM Analysis:")
         print(f"  - Similarity: {alignment_result['similarity_percent']}%")
