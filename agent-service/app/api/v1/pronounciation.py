@@ -36,7 +36,7 @@ def get_pronunciation(text:str):
     })
     
     
-@router.post("/pronounciation")
+@router.post("/pronunciation")
 async def check_pronunciation(file:UploadFile=File(...), text:str=Form(...)):
     # Đọc toàn bộ bytes từ UploadFile
     audio_bytes = await file.read()

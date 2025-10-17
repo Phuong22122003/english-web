@@ -13,3 +13,4 @@ google-genai
 eng_to_ipa
 torchaudio
 python-multipart
+gtts
