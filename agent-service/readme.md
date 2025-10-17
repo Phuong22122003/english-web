@@ -3,3 +3,4 @@
 - create env: python -m venv .venv
 - activate: .venv\Scripts\activate
 - deactivate
+- pip install requirements.txt
