@@ -307,27 +307,33 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
 
     @Override
+    @Transactional
     public VocabularyResponse updateVocabulary(String vocabId, VocabularyRequest request, MultipartFile imageFile,
                                                MultipartFile audioFile) {
-       Vocabulary vocabulary = this.vocabularyRepository.findById(vocabId).orElseThrow(()->new NotFoundException("Vocab not found"));
-       this.vocabularyMapper.patchUpdate(vocabulary,request);
-       if(imageFile!=null&&!imageFile.isEmpty()){
-           if(vocabulary.getPublicImageId()!=null){
-               this.fileService.uploadImage(imageFile,vocabulary.getPublicImageId());
-           }
-           else{
-               this.fileService.uploadImage(imageFile);
-           }
-       }
-       if(audioFile!=null&&!audioFile.isEmpty()){
-           if(vocabulary.getPublicAudioId()!=null){
-               this.fileService.uploadAudio(audioFile,vocabulary.getPublicAudioId());
-           }
-           else{
-               this.fileService.uploadAudio(audioFile);
-           }
-       }
-        return vocabularyMapper.toVocabularyResponse(vocabulary);
+        Vocabulary vocabulary = this.vocabularyRepository.findById(vocabId).orElseThrow(() -> new NotFoundException("Vocab not found"));
+        this.vocabularyMapper.patchUpdate(vocabulary, request);
+        if (imageFile != null && !imageFile.isEmpty()) {
+            FileResponse fileResponse = this.fileService.uploadImage(imageFile, vocabulary.getPublicImageId());
+            vocabulary.setImageUrl(fileResponse.getUrl());
+            vocabulary.setPublicImageId(fileResponse.getPublicId());
+        }
+
+        try{
+            if (audioFile != null && !audioFile.isEmpty()) {
+                FileResponse fileResponse = this.fileService.uploadAudio(audioFile, vocabulary.getPublicAudioId());
+                vocabulary.setAudioUrl(fileResponse.getUrl());
+                vocabulary.setPublicAudioId(fileResponse.getPublicId());
+            }
+        }catch (Exception e){
+            if (imageFile != null && !imageFile.isEmpty()) {
+                fileService.deleteFile(vocabulary.getPublicImageId());
+            }
+            throw new RuntimeException(e.getMessage());
+        }
+        
+        vocabularyRepository.save(vocabulary);
+        return  vocabularyMapper.toVocabularyResponse(vocabulary);
+
     }
     @Override
     @Transactional
