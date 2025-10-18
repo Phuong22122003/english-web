@@ -330,7 +330,7 @@ public class VocabularyServiceImpl implements VocabularyService {
             }
             throw new RuntimeException(e.getMessage());
         }
-        
+
         vocabularyRepository.save(vocabulary);
         return  vocabularyMapper.toVocabularyResponse(vocabulary);
 
@@ -349,6 +349,7 @@ public class VocabularyServiceImpl implements VocabularyService {
     }
 
     @Override
+    @Transactional
     public VocabularyTestResponse addTest(String topicId, VocabularyTestRequest vocabularyTestRequest, List<MultipartFile> imageFiles) {
         VocabularyTopic topic = vocabularyTopicRepository.findById(topicId).orElseThrow(()-> new RuntimeException("Topic not found"));
         VocabularyTest test =  VocabularyTest
@@ -365,6 +366,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         try{
             for(int i = 0; i< questions.size();i++){
                 VocabularyTestQuestion q = questions.get(i);
+                q.setId(null);
                 q.setTest(test);
                 if(imageFiles!=null && imageFiles.size()>i && imageFiles.get(i)!=null && !imageFiles.get(i).isEmpty()){
                     FileResponse fileResponse = fileService.uploadImage(imageFiles.get(i));
