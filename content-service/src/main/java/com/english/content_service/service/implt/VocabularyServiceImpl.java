@@ -155,6 +155,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         try{
             for(int i = 0; i< vocabularies.size();i++){
                 Vocabulary v = vocabularies.get(i);
+                v.setId(null);
                 v.setTopic(topic);
                 v.setCreatedAt(LocalDateTime.now());
                 FileResponse fileResponse = fileService.uploadImage(imageFiles.get(i));
@@ -255,6 +256,7 @@ public class VocabularyServiceImpl implements VocabularyService {
                             vocabularyMapper.patchUpdate(vocab, req);
                         } else {
                             vocab = vocabularyMapper.toVocabulary(req);
+                            vocab.setId(null);
                             vocab.setTopic(topic);
                             vocab.setCreatedAt(LocalDateTime.now());
                         }
@@ -359,6 +361,7 @@ public class VocabularyServiceImpl implements VocabularyService {
                 .duration(vocabularyTestRequest.getDuration())
                 .createdAt(LocalDateTime.now())
                 .build();
+        test.setId(null);
         test = vocabularyTestRepository.save(test);
         List<VocabularyTestQuestion> questions = vocabularyMapper.toVocabularyTestQuestions(vocabularyTestRequest.getQuestions());
         List<String> publicIds = new ArrayList<>();
@@ -454,6 +457,7 @@ public class VocabularyServiceImpl implements VocabularyService {
                     }
                     case ADD -> {
                         VocabularyTestQuestion newQ = vocabularyMapper.toVocabularyTestQuestion(req);
+                        newQ.setId(null);
                         newQ.setTest(test);
 
                         if (req.getImageName() != null) {
