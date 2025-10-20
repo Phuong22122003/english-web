@@ -8,6 +8,8 @@ import com.english.content_service.dto.request.VocabTopicRequest;
 import com.english.content_service.dto.request.VocabularyRequest;
 import com.english.content_service.dto.request.VocabularyTestQuestionRequest;
 import com.english.content_service.dto.request.VocabularyTestRequest;
+import com.english.content_service.httpclient.AgentClient;
+import com.english.content_service.service.AgentService;
 import com.english.dto.response.*;
 import com.english.enums.RequestType;
 import com.english.exception.NotFoundException;
@@ -26,7 +28,6 @@ import com.english.content_service.repository.VocabularyTestQuestionRepository;
 import com.english.content_service.repository.VocabularyTestRepository;
 import com.english.content_service.repository.VocabularyTopicRepository;
 import com.english.content_service.service.VocabularyService;
-import com.english.dto.response.*;
 import com.english.service.FileService;
 
 import lombok.AccessLevel;
@@ -46,6 +47,7 @@ public class VocabularyServiceImpl implements VocabularyService {
     VocabularyTestQuestionRepository vocabularyTestQuestionRepository;
     VocabularyMapper vocabularyMapper;
     FileService fileService;
+    AgentService agentService;
     @Override
     public Page<VocabTopicResponse> getTopics(int page, int size) {
         Page<VocabularyTopic> topics = vocabularyTopicRepository.findAll(PageRequest.of(page, size));
@@ -89,6 +91,7 @@ public class VocabularyServiceImpl implements VocabularyService {
                 .build()).orElse(null);
     }
     @Override
+    @Transactional
     public VocabTopicResponse addTopic(VocabTopicRequest request, MultipartFile imageFile) {
         VocabularyTopic topic = vocabularyMapper.toVocabTopic(request);
         FileResponse fileResponse=null;
@@ -100,6 +103,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         topic.setCreatedAt(LocalDateTime.now());
         try{
             VocabularyTopic savedTopic = vocabularyTopicRepository.save(topic);
+            agentService.addTopicToVectorDB(savedTopic);
             return vocabularyMapper.toVocabTopicResponse(savedTopic);
         } catch (Exception e) {
             if(fileResponse!=null)

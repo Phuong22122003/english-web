@@ -1,16 +1,15 @@
 from fastapi import APIRouter, File, UploadFile, Form
 from app.schemas import *
-from app.service import *
-import soundfile as sf
+from app.service import pronoun_service
 import io
 from gtts import gTTS
-import eng_to_ipa
 import base64
-import io
+import numpy as np
+from pydub import AudioSegment
 from fastapi.responses import JSONResponse
+import eng_to_ipa as ipa
 
 router = APIRouter()
-pronoun_service = PronounciationService()
 
 @router.post("/pronunciation/{text}")
 def get_pronunciation(text:str):
@@ -36,27 +35,11 @@ def get_pronunciation(text:str):
     })
     
     
-import io
-import wave
-
-import numpy as np
-import scipy.io.wavfile
-import soundfile as sf
-from scipy.io.wavfile import write
-
-from pydub import AudioSegment
-import numpy as np
-import io
-import soundfile as sf
-
 
 @router.post("/pronunciation")
 async def check_pronunciation(file:UploadFile=File(...), text:str=Form(...)):
     # Đọc toàn bộ bytes từ UploadFile
     audio_bytes = await file.read()
-
-    # # Dùng BytesIO để đọc như file trong bộ nhớ
-    audio_io = io.BytesIO(audio_bytes)
     
     audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
     audio = audio.set_channels(1).set_frame_rate(16000)

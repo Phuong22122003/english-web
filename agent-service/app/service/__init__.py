@@ -1,1 +1,3 @@
-from .pronounciation_service import *
+from .pronunciation_service import *
+from .topic_service import *
+pronoun_service = PronunciationService()

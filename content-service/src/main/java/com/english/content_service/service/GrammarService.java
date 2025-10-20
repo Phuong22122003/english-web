@@ -29,5 +29,5 @@ public interface GrammarService {
     GetGrammarTestQuestionsByTestIdResponse getTestQuestionsByTestId(String testId);
     List<GrammarTestResponse> getTestsByIds(List<String> ids);
     void deleteTestById(String id);
-    GrammarTestResponse updateGrammarTest(String testId, GrammarTestRequest request);;
+    GrammarTestResponse updateGrammarTest(String testId, GrammarTestRequest request);
 }

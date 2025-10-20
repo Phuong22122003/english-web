@@ -10,5 +10,6 @@ class TopicSuggestionResponse(BaseModel):
     
 class TopicCreateRequest(BaseModel):
     id: str
+    topic_type: str
     name: str
     description: str

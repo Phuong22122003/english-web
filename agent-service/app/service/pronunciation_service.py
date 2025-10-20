@@ -7,13 +7,13 @@ import torchaudio
 import numpy as np
 import json
 from google import genai
-import os
 from app.schemas import *
+from app.core import settings
 
-class PronounciationService:
+class PronunciationService:
     def __init__(self):
         if not os.environ.get("GOOGLE_API_KEY"):
-            os.environ["GOOGLE_API_KEY"] = 'AIzaSyC25KhSrP9q6CPmGppr44vUVZASFXFsR6g'
+            os.environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
         self.llm = genai.Client()
         self.processor = AutoProcessor.from_pretrained("vitouphy/wav2vec2-xls-r-300m-timit-phoneme")
         self.model = AutoModelForCTC.from_pretrained("vitouphy/wav2vec2-xls-r-300m-timit-phoneme")
