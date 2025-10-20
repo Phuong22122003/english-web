@@ -126,6 +126,7 @@ public class GrammarServiceImpl implements GrammarService {
         for(var question: request.getQuestions()){
             if(question.getAction().equals(RequestType.ADD)){
                 var q = grammarMapper.toGrammarTestQuestion(question);
+                q.setId(null);
                 q.setTest(test);
                 newQuestion.add(q);
             }
