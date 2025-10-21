@@ -1,6 +1,9 @@
 version: "3.9"
 
 services:
+  # =========================
+  # 🗄 DATABASE SERVICES
+  # =========================
   postgres-userservice:
     image: postgres
     container_name: postgres-userservice
@@ -16,6 +19,7 @@ services:
     volumes:
       - postgres_user_data:/var/lib/postgresql/data
     command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
+
   postgres-contentservice:
     image: postgres
     container_name: postgres-contentservice
@@ -30,7 +34,8 @@ services:
       - "5433:5432"
     volumes:
       - postgres_content_data:/var/lib/postgresql/data
-    command: [ "postgres", "-c", "timezone=Asia/Ho_Chi_Minh" ]
+    command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
+
   postgres-learningservice:
     image: postgres
     container_name: postgres-learningservice
@@ -45,7 +50,8 @@ services:
       - "5434:5432"
     volumes:
       - postgres_learning_data:/var/lib/postgresql/data
-    command: [ "postgres", "-c", "timezone=Asia/Ho_Chi_Minh" ]
+    command: ["postgres", "-c", "timezone=Asia/Ho_Chi_Minh"]
+
   redis:
     image: redis:7.2
     container_name: redis
@@ -53,8 +59,10 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+
   redis-insight:
     image: redislabs/redisinsight:latest
+    container_name: redis-insight
     ports:
       - "5540:5540"
 
@@ -66,7 +74,79 @@ services:
       - "6333:6333"   # REST API
       - "6334:6334"   # gRPC
     volumes:
-      - qdrant_storage:/qdrant/storage  # map volume để lưu dữ liệu
+      - qdrant_storage:/qdrant/storage
+
+  # =========================
+  # ⚙️ APPLICATION SERVICES
+  # =========================
+  user-service:
+    build: ./user-service
+    image: user-service:latest
+    container_name: user-service
+    restart: always
+    depends_on:
+      - postgres-userservice
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-userservice:5432/userservice
+      - SPRING_DATASOURCE_USERNAME=dbowner
+      - SPRING_DATASOURCE_PASSWORD=dbowner
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8081:8080"
+
+  content-service:
+    build: ./content-service
+    image: content-service:latest
+    container_name: content-service
+    restart: always
+    depends_on:
+      - postgres-contentservice
+      - redis
+      - qdrant
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-contentservice:5432/contentservice
+      - SPRING_DATASOURCE_USERNAME=dbowner
+      - SPRING_DATASOURCE_PASSWORD=dbowner
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QDRANT_URL=http://qdrant:6333
+    ports:
+      - "8082:8080"
+
+  learning-service:
+    build: ./learning-service
+    image: learning-service:latest
+    container_name: learning-service
+    restart: always
+    depends_on:
+      - postgres-learningservice
+      - redis
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-learningservice:5432/learningservice
+      - SPRING_DATASOURCE_USERNAME=dbowner
+      - SPRING_DATASOURCE_PASSWORD=dbowner
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8083:8080"
+
+  api-gateway:
+    build: ./api-gateway
+    image: api-gateway:latest
+    container_name: api-gateway
+    restart: always
+    depends_on:
+      - user-service
+      - content-service
+      - learning-service
+    environment:
+      - USER_SERVICE_URL=http://user-service:8080
+      - CONTENT_SERVICE_URL=http://content-service:8080
+      - LEARNING_SERVICE_URL=http://learning-service:8080
+    ports:
+      - "8080:8080"
+
 volumes:
   postgres_user_data:
   postgres_content_data:
