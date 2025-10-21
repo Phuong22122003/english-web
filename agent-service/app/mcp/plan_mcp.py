@@ -5,6 +5,8 @@ mcp = FastMCP(
 
 @mcp.tool()
 def get_user_info(user_id:str):
-    pass
+    '''Get user information by user ID'''
+    return  'I am a beginner in English. I want to improve my English skills for grammar and vocabulary.'
+
 if __name__=='__main__':
     mcp.run()

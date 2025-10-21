@@ -1,5 +1,6 @@
-from app.service.agent_service import Agent
+from app.service.agent_service import AgentService
+import asyncio
 if __name__=='__main__':
-    agent = Agent()
-    result = agent.invoke({})
+    agent = AgentService()
+    result = asyncio.run( agent.invoke({}))
     print(result)

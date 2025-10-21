@@ -5,11 +5,14 @@ from .topic_service import topic_service
 import json
 import os
 from app.core import settings
+from fastmcp import Client
+
 if not os.environ.get("GOOGLE_API_KEY"):
   os.environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
 
-class Agent:
+class AgentService:
     def __init__(self): 
+        self.mcp_path = r"D:\Workspace\Java\Microservice\english-web\agent-service\app\mcp\plan_mcp.py"
         self.llm = init_chat_model("gemini-2.5-flash", model_provider="google_genai")
         
         # Compile application and test
@@ -27,11 +30,13 @@ class Agent:
         
         self.graph = graph_builder.compile()
         
-    def invoke(self, input_data:dict):
-        self.graph.invoke({'user_info':'I am a beginner in English. I want to improve my English skills for daily communication.'})
-    def user_data(self, state: Plan):
-        print("Fetching user data...")
-        return {"user_info": "User likes to learn grammar and their vocabulary is weak"}
+    async def invoke(self, input_data:dict):
+        await self.graph.ainvoke({'user_info':'I am a beginner in English. I want to improve my English skills for daily communication.'})
+    
+    async def user_data(self, state: Plan):
+        async with Client(self.mcp_path) as client:
+            user_info = await client.call_tool("get_user_info", {"user_id": "user-123"})
+        return {"user_info": user_info.content[0].text}
 
     def plan(self, plan: Plan):
         prompt = f"""
@@ -78,7 +83,7 @@ Use this exact format:
             "startDate": "string",
             "endDate": "string",
         }},
-        [{{
+        {{
             "name": "string",
             "description": "string",
             "startDate": "string",
@@ -89,11 +94,14 @@ Use this exact format:
         '''
         response = self.llm.invoke(prompt)
         plan_group_json = response.content
+        if plan_group_json.startswith("```"):
+            plan_group_json = plan_group_json.strip("`")       # xóa dấu `
+            plan_group_json = plan_group_json.replace("json", "", 1).strip()  # xóa chữ 'json' ở đầu nếu có
         plan_groups = json.loads(plan_group_json)
         plan['planGroups'] = plan_groups
         return plan 
     def plan_detail(self, plan:Plan):
-        for group in plan.planGroups: 
+        for group in plan["planGroups"]: 
             data = topic_service.search(group['name'] + group['description'])
             plan_detail = []
             for item in data:
