@@ -1,6 +1,8 @@
 package com.english.user_service.service.implt;
 
 import com.english.dto.response.FileResponse;
+import com.english.exception.BadRequestException;
+import com.english.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -45,11 +47,11 @@ public class UserServiceImplt implements UserService {
     public void createUser(UserCreationRequest request) {
         boolean isExist = userRepository.existsByUsername(request.getUsername());
         if (isExist) {
-            throw new RuntimeException("Username is already taken");
+            throw new BadRequestException("Username is already taken");
         }
         isExist = userRepository.existsByEmail(request.getEmail());
         if (isExist) {
-            throw new RuntimeException("Email is already taken");
+            throw new BadRequestException("Email is already taken");
         }
         User user = User.builder()
                 .username(request.getUsername())
@@ -73,7 +75,7 @@ public class UserServiceImplt implements UserService {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
         User user = userRepository.findById(userId).orElseThrow(()->{
-            return new RuntimeException("User not found");
+            return new NotFoundException("User not found");
         });
         userMapper.updateUserFromDto(request,user);
         userRepository.save(user);
@@ -86,7 +88,7 @@ public class UserServiceImplt implements UserService {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
         User user = userRepository.findById(userId).orElseThrow(() -> {
-            throw new RuntimeException("User not found");
+            throw new NotFoundException("User not found");
         });
         String publicId = user.getPublicId();
         FileResponse fileResponse;
@@ -104,7 +106,7 @@ public class UserServiceImplt implements UserService {
     @Override
     public UserResponse getUserById(String userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> {
-            throw new RuntimeException("User not found");
+            throw new NotFoundException("User not found");
         });
         UserResponse response = userMapper.toUserResponse(user);
         return response;
@@ -115,7 +117,7 @@ public class UserServiceImplt implements UserService {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
         User user = userRepository.findById(userId).orElseThrow(() -> {
-            throw new RuntimeException("User not found");
+            throw new NotFoundException("User not found");
         });
         return userMapper.toUserResponse(user);
     }

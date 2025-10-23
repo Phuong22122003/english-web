@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         apiResponse.setMessage(runtimeException.getMessage());
-        return  ResponseEntity.badRequest().body(apiResponse);
+        return  ResponseEntity.internalServerError().body(apiResponse);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
