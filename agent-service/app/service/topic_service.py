@@ -37,10 +37,10 @@ class TopicService:
         for result in results:
             metadata = result.metadata
             topic = {
-                'id':metadata.id,
-                'name':metadata.name,
-                'description':metadata.description,
-                'topic_type':metadata.topic_type
+                'id':metadata['id'],
+                'name':metadata['name'],
+                'description':metadata['description'],
+                'topic_type':metadata['topic_type']
             }
             topics.append(topic)
         return topics

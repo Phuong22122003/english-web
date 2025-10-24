@@ -58,5 +58,46 @@ def get_plan_group_prompt(plan):
     ]
     '''
     return prompt
+@mcp.prompt()
+def get_plan_detail_prompt(group, plan, topics):
+    plan = json.loads(plan)
+    group = json.loads(group)
+    topics = json.loads(topics)
+    prompt = f"""
+    You are an English learning expert.
+
+    Your task:
+    Evaluate whether each topic below is suitable for the user's learning plan.
+
+    User Plan:
+    User Info: {plan['user_info']}
+    Title: {plan['title']}
+    Description: {plan['description']}
+    Time Range: {plan['startDate']} → {plan['endDate']}
+
+    Current Plan Group:
+    Name: {group['name']}
+    Description: {group['description']}
+
+    Topics:
+    {json.dumps(topics, ensure_ascii=False, indent=2)}
+
+    Current Plan Group:
+    Name: {group['name']}
+    Description: {group['description']}
+
+    Topics:
+    {json.dumps(topics, ensure_ascii=False, indent=2)}
+
+    For each topic, decide if it fits this plan group.
+    Return a JSON array in this format:
+    [
+      {{"topicId": "string", "approved": true/false, "reason": "string"}}
+    ]
+
+    Return ONLY the JSON array. No explanation.
+    """
+    return prompt
+
 if __name__=='__main__':
     mcp.run()

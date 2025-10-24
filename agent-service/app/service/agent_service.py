@@ -6,7 +6,7 @@ import json
 import os
 from app.core import settings
 from fastmcp import Client
-
+import threading, requests
 if not os.environ.get("GOOGLE_API_KEY"):
   os.environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
 
@@ -17,7 +17,7 @@ class MCPClientHolder:
     @classmethod
     async def get_client(cls):
         if cls._client is None:
-            cls._client = await Client(r"..\mcp\plan_mcp.py").__aenter__()
+            cls._client = await Client(r"D:\Documents\DATN\backend\agent-service\app\mcp\plan_mcp.py").__aenter__()
         return cls._client
 
     @classmethod
@@ -28,7 +28,7 @@ class MCPClientHolder:
 
 class AgentService:
     def __init__(self): 
-        self.llm = init_chat_model("gemini-2.5-flash", model_provider="google_genai")
+        self.llm = init_chat_model("gemini-2.5-flash-lite", model_provider="google_genai")
         
         # Compile application and test
         graph_builder = StateGraph(Plan)
@@ -46,14 +46,17 @@ class AgentService:
         self.graph = graph_builder.compile()
         
     async def invoke(self, input_data:dict):
-        await self.graph.ainvoke({'user_info':'I am a beginner in English. I want to improve my English skills for daily communication.'})
+        result = await self.graph.ainvoke({'user_info': input_data})
+        return result
     
     async def user_data(self, state: Plan):
+        print("Fetching user data...")
         client = await MCPClientHolder.get_client()
         user_info = await client.call_tool("get_user_info", {"user_id": "user-123"})
         return {"user_info": user_info.content[0].text}
 
     async def plan(self, plan: Plan):
+        print("Creating plan...")
         client = await MCPClientHolder.get_client()
         prompt = await client.get_prompt("get_plan_prompt", arguments={"user_info": plan["user_info"]})
         prompt = prompt.messages[0].content.text
@@ -69,8 +72,9 @@ class AgentService:
         return plan
 
     async def plan_group(self, plan: Plan):
+        print("Creating plan groups...")
         client = await MCPClientHolder.get_client()
-        prompt = await client.get_prompt("get_plan_prompt", arguments={"plan": plan})
+        prompt = await client.get_prompt("get_plan_group_prompt", arguments={"plan": plan})
         prompt = prompt.messages[0].content.text
         
         response = self.llm.invoke(prompt)
@@ -82,20 +86,47 @@ class AgentService:
         plan['planGroups'] = plan_groups
         return plan 
         
-    def plan_detail(self, plan:Plan):
+    async def plan_detail(self, plan:Plan):
+        print("Creating plan details...")
+        client = await MCPClientHolder.get_client()
         for group in plan["planGroups"]: 
             data = topic_service.search(group['name'] + group['description'])
+
+            prompt = await client.get_prompt("get_plan_detail_prompt", arguments={"group": group, "plan": plan, "topics": data})
+            prompt = prompt.messages[0].content.text
+
+            response = self.llm.invoke(prompt)
+            result_json = response.content.strip()
+            if result_json.startswith("```"):
+                result_json = result_json.strip("`").replace("json", "").strip()
+            evaluation = json.loads(result_json)
+
             plan_detail = []
-            for item in data:
-                detail = {
-                    'topicType': item['topic_type'],
-                    'topicId': item['id']
-                }
-                plan_detail.append(detail)
-            plan.setdefault('planDetails', []).append(plan_detail)
+            for item in evaluation:
+                if item.get("approved"):
+                    topic_id = item["topicId"]
+                    topic = next((t for t in data if t["id"] == topic_id), None)
+                    if topic:
+                        plan_detail.append({"topicType": topic["topic_type"], "topicId": topic["id"]})
+            if plan_detail:
+                group.setdefault("planDetails", []).extend(plan_detail)
+        fire_and_forget(settings.PLAN_SERVICE_CALLBACK_URL, plan)
         return plan
 
-
+def fire_and_forget(url, data):
+    print("Sending callback...")
+    try:
+        headers = {
+                "Authorization": f"Bearer {settings.JWT}",
+                "Content-Type": "application/json"
+        }
+        requests.post(
+            url,
+            json=data,
+            headers=headers
+        )
+    except requests.exceptions.ReadTimeout:
+        print("Request sent, not waiting for response.")
 
 # from typing_extensions import List, TypedDict
 
