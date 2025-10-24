@@ -4,6 +4,7 @@ import com.english.content_service.dto.request.ListeningRequest;
 import com.english.content_service.dto.request.ListeningTestRequest;
 import com.english.content_service.dto.request.ListeningTopicRequest;
 import com.english.content_service.entity.ListeningTestQuestion;
+import com.english.content_service.service.AgentService;
 import com.english.dto.response.FileResponse;
 import com.english.dto.response.ListeningResponse;
 import com.english.dto.response.ListeningTestReponse;
@@ -47,6 +48,7 @@ public class ListeningServiceImpl implements ListeningService {
     ListeningRepository listeningRepository;
     ListeningTestRepository listeningTestRepository;
     ListeningTestQuestionRepository listeningTestQuestionRepository;
+    AgentService agentService;
     @Override
     public Page<ListeningTopicResponse> getTopics(int page, int size) {
         Page<ListeningTopic> topics = listeningTopicRepository.findAll(PageRequest.of(page, size));
@@ -58,12 +60,22 @@ public class ListeningServiceImpl implements ListeningService {
     @Override
     @Transactional
     public ListeningTopicResponse addTopic(ListeningTopicRequest request, MultipartFile imageFile) {
-        var fileRespose = fileService.uploadImage(imageFile);
         ListeningTopic topic = listeningMapper.toTopicEntity(request);
+        if(imageFile!=null&&!imageFile.isEmpty()){
+            var fileResponse = fileService.uploadImage(imageFile);
+            topic.setImageUrl(fileResponse.getUrl());
+            topic.setPublicId(fileResponse.getPublicId());
+        }
         topic.setCreatedAt(LocalDateTime.now());
-        topic.setImageUrl(fileRespose.getUrl());
-        topic.setPublicId(fileRespose.getPublicId());
-        listeningTopicRepository.save(topic);
+
+        try {
+            topic = listeningTopicRepository.save(topic);
+            agentService.addTopicToVectorDB(topic);
+        } catch (Exception e) {
+            if(topic.getPublicId()!=null) fileService.deleteFile(topic.getPublicId());
+            throw new RuntimeException(e);
+        }
+
         return listeningMapper.toTopicResponse(topic);
     }
 

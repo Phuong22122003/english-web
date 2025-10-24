@@ -3,13 +3,18 @@ package com.english.learning_service.service.implt;
 import com.english.exception.AppException;
 import com.english.exception.NotFoundException;
 import com.english.learning_service.dto.request.PlanGroupRequest;
+import com.english.learning_service.dto.request.PlanIntentRequest;
 import com.english.learning_service.dto.request.PlanRequest;
+import com.english.learning_service.dto.request.UserInfoRequest;
 import com.english.learning_service.dto.response.PlanGroupResponse;
 import com.english.learning_service.dto.response.PlanResponse;
+import com.english.learning_service.entity.ExamHistory;
 import com.english.learning_service.entity.Plan;
 import com.english.learning_service.entity.PlanDetail;
 import com.english.learning_service.entity.PlanGroup;
+import com.english.learning_service.httpclient.AgentClient;
 import com.english.learning_service.mapper.PlanMapper;
+import com.english.learning_service.repository.ExamHistoryRepository;
 import com.english.learning_service.repository.PlanDetailRepository;
 import com.english.learning_service.repository.PlanGroupRepository;
 import com.english.learning_service.repository.PlanRepository;
@@ -25,8 +30,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Slf4j
@@ -39,6 +47,9 @@ public class PlanServiceImplt implements PlanService {
     PlanRepository planRepository;
     PlanDetailRepository planDetailRepository;
     PlanGroupRepository planGroupRepository;
+    ExamHistoryRepository examHistoryRepository;
+    AgentClient agentClient;
+    private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
     @Override
     @Transactional
     public PlanResponse addPlan(PlanRequest request) {
@@ -70,6 +81,50 @@ public class PlanServiceImplt implements PlanService {
         }
 
         return response;
+    }
+
+    @Override
+    public SseEmitter addPlanByAgent(PlanIntentRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+
+        UserInfoRequest userInfoRequest = new UserInfoRequest();
+        userInfoRequest.setLevel(request.getLevel());
+        userInfoRequest.setDescription(request.getDescription());
+        userInfoRequest.setLevel(request.getLevel());
+        userInfoRequest.setUserId(userId);
+
+        List<ExamHistory> examHistories = this.examHistoryRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
+        examHistories.forEach(e->{
+            e.setId(null);
+            e.setUserId(null);
+            e.setTestId(null);
+            e.setSubmittedAt(null);
+        });
+        userInfoRequest.setRecentExamHistory(examHistories);
+        agentClient.generatePlan(userInfoRequest);
+
+        SseEmitter emitter = new SseEmitter(0L); // Không timeout
+        emitters.put(userId, emitter);
+
+        emitter.onCompletion(() -> emitters.remove(userId));
+        emitter.onTimeout(() -> emitters.remove(userId));
+        emitter.onError((e) -> emitters.remove(userId));
+        return emitter;
+    }
+
+    @Override
+    public void sendNotification(PlanRequest planRequest) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+        SseEmitter emitter = emitters.get(userId);
+        if (emitter != null) {
+            try {
+                emitter.send(SseEmitter.event().name("UPDATE").data(planRequest));
+            } catch (IOException e) {
+                emitter.completeWithError(e);
+            }
+        }
     }
 
     @Override

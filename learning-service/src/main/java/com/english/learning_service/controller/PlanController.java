@@ -1,5 +1,7 @@
 package com.english.learning_service.controller;
 
+import com.english.dto.response.ApiResponse;
+import com.english.learning_service.dto.request.PlanIntentRequest;
 import com.english.learning_service.dto.request.PlanRequest;
 import com.english.learning_service.dto.response.PlanResponse;
 import com.english.learning_service.service.PlanService;
@@ -7,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/plan")
@@ -29,6 +32,16 @@ public class PlanController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/callback")
+    public ResponseEntity<?> callBack(@RequestBody PlanRequest request) {
+        planService.sendNotification(request);
+        return ResponseEntity.ok(null);
+    }
+
+    @PostMapping("/agent-generation")
+    public SseEmitter addPlan(@RequestBody PlanIntentRequest request){
+        return planService.addPlanByAgent(request);
+    }
     /**
      * Get paginated list of plans
      * Example: GET /plan?page=0&size=10

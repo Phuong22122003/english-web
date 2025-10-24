@@ -2,6 +2,7 @@ package com.english.user_service.dto.response;
 
 import java.time.LocalDateTime;
 
+import com.english.user_service.enums.Level;
 import com.english.user_service.enums.StudyTime;
 import com.english.user_service.enums.UserRole;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -23,6 +24,6 @@ public class UserResponse {
     String avartarUrl;
     Integer target; // target study time per day (minutes)
     StudyTime studyTime; // morning, afternoon, evening, night
-    String level; // beginner, intermediate, advanced
+    Level level; // beginner, intermediate, advanced
     LocalDateTime createdAt; 
 }

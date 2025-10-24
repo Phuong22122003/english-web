@@ -12,6 +12,7 @@ import com.english.content_service.repository.GrammarRepository;
 import com.english.content_service.repository.GrammarTestQuestionRepository;
 import com.english.content_service.repository.GrammarTestRepository;
 import com.english.content_service.repository.GrammarTopicRepository;
+import com.english.content_service.service.AgentService;
 import com.english.dto.response.*;
 import com.english.enums.RequestType;
 import com.english.exception.NotFoundException;
@@ -40,6 +41,7 @@ public class GrammarServiceImpl implements GrammarService {
     GrammarTestQuestionRepository grammarTestQuestionRepository;
     GrammarMapper grammarMapper;
     FileService fileService;
+    AgentService agentService;
 
     @Override
     public Page<GrammarTopicResponse> getTopics(int page, int size) {
@@ -147,15 +149,24 @@ public class GrammarServiceImpl implements GrammarService {
     }
 
     @Override
+    @Transactional
     public GrammarTopicResponse addTopic(GrammarTopicRequest request, MultipartFile imageFile) {
         GrammarTopic topic = new GrammarTopic();
         topic.setCreatedAt(LocalDateTime.now());
         topic.setName(request.getName());
         topic.setDescription(request.getDescription());
-        FileResponse fileResponse = fileService.uploadImage(imageFile);
-        topic.setImageUrl(fileResponse.getUrl());
-        topic.setPublicId(fileResponse.getPublicId());
-        grammarTopicRepository.save(topic);
+        if(imageFile!=null && !imageFile.isEmpty()){
+            FileResponse fileResponse = fileService.uploadImage(imageFile);
+            topic.setImageUrl(fileResponse.getUrl());
+            topic.setPublicId(fileResponse.getPublicId());
+        }
+        try {
+            topic = grammarTopicRepository.save(topic);
+            agentService.addTopicToVectorDB(topic);
+        } catch (Exception e) {
+            if(topic.getPublicId()!=null) fileService.deleteFile(topic.getPublicId());
+            throw new RuntimeException(e);
+        }
         return grammarMapper.toGrammarTopicResponse(topic);
     }
 
