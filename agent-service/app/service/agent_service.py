@@ -10,9 +10,24 @@ from fastmcp import Client
 if not os.environ.get("GOOGLE_API_KEY"):
   os.environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
 
+
+class MCPClientHolder:
+    _client = None
+
+    @classmethod
+    async def get_client(cls):
+        if cls._client is None:
+            cls._client = await Client(r"..\mcp\plan_mcp.py").__aenter__()
+        return cls._client
+
+    @classmethod
+    async def close(cls):
+        if cls._client:
+            await cls._client.__aexit__(None, None, None)
+            cls._client = None
+
 class AgentService:
     def __init__(self): 
-        self.mcp_path = r"D:\Workspace\Java\Microservice\english-web\agent-service\app\mcp\plan_mcp.py"
         self.llm = init_chat_model("gemini-2.5-flash", model_provider="google_genai")
         
         # Compile application and test
@@ -34,33 +49,14 @@ class AgentService:
         await self.graph.ainvoke({'user_info':'I am a beginner in English. I want to improve my English skills for daily communication.'})
     
     async def user_data(self, state: Plan):
-        async with Client(self.mcp_path) as client:
-            user_info = await client.call_tool("get_user_info", {"user_id": "user-123"})
+        client = await MCPClientHolder.get_client()
+        user_info = await client.call_tool("get_user_info", {"user_id": "user-123"})
         return {"user_info": user_info.content[0].text}
 
-    def plan(self, plan: Plan):
-        prompt = f"""
-You are an expert English learning planner.
-
-Your task:
-Based on the user information below, create a general learning plan for the user.  
-The plan should include:
-- A clear and concise title describing the plan.
-- A brief description (2–4 sentences) of what the plan covers and its goal.
-- A start date and an end date in ISO format (YYYY-MM-DD).
-
-User information:
-{plan['user_info']}
-
-Return ONLY a valid JSON object (no markdown, no explanation, no code block).
-Use this exact format:
-{{
-  "title": "string",
-  "description": "string",
-  "startDate": "YYYY-MM-DD",
-  "endDate": "YYYY-MM-DD"
-}}
-"""
+    async def plan(self, plan: Plan):
+        client = await MCPClientHolder.get_client()
+        prompt = await client.get_prompt("get_plan_prompt", arguments={"user_info": plan["user_info"]})
+        prompt = prompt.messages[0].content.text
 
         response = self.llm.invoke(prompt)
         plan_json = response.content
@@ -72,26 +68,11 @@ Use this exact format:
         plan.update(plan_response)
         return plan
 
-    def plan_group(self, plan: Plan):
-        prompt=f'''You are an expert English learning planner. Based on the user information and plan information, create a plan group for the user.\n
-        User Information: {plan['user_info']}\n
-        Plan Information: Title: {plan['title']}, description: {plan['description']}, startDate: {plan['startDate']}, endDate: {plan['endDate']}\n
-        Your response should be in JSON format as below
-        [{{
-            "name": "string",
-            "description": "string",
-            "startDate": "string",
-            "endDate": "string",
-        }},
-        {{
-            "name": "string",
-            "description": "string",
-            "startDate": "string",
-            "endDate": "string",
-        }},
-        ...
-        ]
-        '''
+    async def plan_group(self, plan: Plan):
+        client = await MCPClientHolder.get_client()
+        prompt = await client.get_prompt("get_plan_prompt", arguments={"plan": plan})
+        prompt = prompt.messages[0].content.text
+        
         response = self.llm.invoke(prompt)
         plan_group_json = response.content
         if plan_group_json.startswith("```"):
@@ -100,6 +81,7 @@ Use this exact format:
         plan_groups = json.loads(plan_group_json)
         plan['planGroups'] = plan_groups
         return plan 
+        
     def plan_detail(self, plan:Plan):
         for group in plan["planGroups"]: 
             data = topic_service.search(group['name'] + group['description'])
