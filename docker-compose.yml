@@ -101,7 +101,6 @@ services:
     depends_on:
       - postgres-contentservice
       - redis
-      - qdrant
     environment:
       - CONNECTION_URL=jdbc:postgresql://postgres-contentservice:5432/contentservice
       - CONNECTION_USERNAME=dbowner
