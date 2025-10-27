@@ -94,7 +94,7 @@ public class PlanServiceImplt implements PlanService {
         userInfoRequest.setLevel(request.getLevel());
         userInfoRequest.setUserId(userId);
 
-        List<ExamHistory> examHistories = this.examHistoryRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId);
+        List<ExamHistory> examHistories = this.examHistoryRepository.findTop5ByUserIdOrderByTakenAtDesc(userId);
         examHistories.forEach(e->{
             e.setId(null);
             e.setUserId(null);

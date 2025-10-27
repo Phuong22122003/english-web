@@ -80,24 +80,22 @@ services:
   # ⚙️ APPLICATION SERVICES
   # =========================
   user-service:
-    build: ./user-service
-    image: user-service:latest
+    image: phuongnbp/user-service:latest
     container_name: user-service
     restart: always
     depends_on:
       - postgres-userservice
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-userservice:5432/userservice
-      - SPRING_DATASOURCE_USERNAME=dbowner
-      - SPRING_DATASOURCE_PASSWORD=dbowner
+      - CONNECTION_URL=jdbc:postgresql://postgres-userservice:5432/userservice
+      - CONNECTION_USERNAME=dbowner
+      - CONNECTION_PASSWORD=dbowner
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     ports:
       - "8081:8080"
 
   content-service:
-    build: ./content-service
-    image: content-service:latest
+    image: phuongnbp/content-service:latest
     container_name: content-service
     restart: always
     depends_on:
@@ -105,31 +103,25 @@ services:
       - redis
       - qdrant
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-contentservice:5432/contentservice
-      - SPRING_DATASOURCE_USERNAME=dbowner
-      - SPRING_DATASOURCE_PASSWORD=dbowner
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - QDRANT_URL=http://qdrant:6333
+      - CONNECTION_URL=jdbc:postgresql://postgres-contentservice:5432/contentservice
+      - CONNECTION_USERNAME=dbowner
+      - CONNECTION_PASSWORD=dbowner
     ports:
-      - "8082:8080"
+      - "8082:8082"
 
   learning-service:
-    build: ./learning-service
-    image: learning-service:latest
+    image: phuongnbp/learning-service:latest
     container_name: learning-service
     restart: always
     depends_on:
       - postgres-learningservice
       - redis
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-learningservice:5432/learningservice
-      - SPRING_DATASOURCE_USERNAME=dbowner
-      - SPRING_DATASOURCE_PASSWORD=dbowner
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - CONNECTION_URL=jdbc:postgresql://postgres-learningservice:5432/learningservice
+      - CONNECTION_USERNAME=dbowner
+      - CONNECTION_PASSWORD=dbowner
     ports:
-      - "8083:8080"
+      - "8083:8083"
 
   api-gateway:
     build: ./api-gateway
@@ -141,11 +133,13 @@ services:
       - content-service
       - learning-service
     environment:
-      - USER_SERVICE_URL=http://user-service:8080
-      - CONTENT_SERVICE_URL=http://content-service:8080
-      - LEARNING_SERVICE_URL=http://learning-service:8080
+      - USER_SERVICE_URL=http://user-service:8081
+      - CONTENT_SERVICE_URL=http://content-service:8082
+      - LEARNING_SERVICE_URL=http://learning-service:8083
+      - AGENT_SERVICE_URL=http://agent-service:5000
     ports:
       - "8080:8080"
+
 
 volumes:
   postgres_user_data:

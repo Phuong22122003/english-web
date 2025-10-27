@@ -13,5 +13,5 @@ import java.util.List;
 public interface ExamHistoryRepository extends JpaRepository<ExamHistory, String> {
     public Page<ExamHistory> findByUserId(String userId, Pageable pageable);
     public Page<ExamHistory> findByUserIdAndTestType(String userId, ItemTypeEnum testType, Pageable pageable);
-    List<ExamHistory> findTop5ByUserIdOrderByCreatedAtDesc(String userId);
+    List<ExamHistory> findTop5ByUserIdOrderByTakenAtDesc(String userId);
 }
