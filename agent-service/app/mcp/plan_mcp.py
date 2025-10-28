@@ -1,5 +1,7 @@
 from fastmcp import FastMCP
 import json
+from datetime import datetime
+import pytz      
 mcp = FastMCP(
     name='Plan server'
 )
@@ -9,10 +11,12 @@ def get_user_info(user_id:str):
     '''Get user information by user ID'''
     return  'I am a beginner in English. I want to improve my English skills for grammar and vocabulary.'
 @mcp.prompt()
-def get_plan_prompt(user_info) -> str:
+def get_plan_prompt(user_info, current_time) -> str:
     ''''''
     prompt = f"""
     You are an expert English learning planner.
+
+    Today's date is {current_time}.
 
     Your task:
     Based on the user information below, create a general learning plan for the user.  
@@ -59,7 +63,7 @@ def get_plan_group_prompt(plan):
     '''
     return prompt
 @mcp.prompt()
-def get_plan_detail_prompt(group, plan, topics):
+def get_plan_detail_prompt(group, plan, topics) -> str:
     plan = json.loads(plan)
     group = json.loads(group)
     topics = json.loads(topics)
@@ -98,6 +102,16 @@ def get_plan_detail_prompt(group, plan, topics):
     Return ONLY the JSON array. No explanation.
     """
     return prompt
+
+@mcp.tool()
+def get_current_time(timezone: str = "Asia/Ho_Chi_Minh") -> str:
+    """Return the current system time in ISO format for a given timezone."""
+    try:
+        tz = pytz.timezone(timezone)
+    except Exception:
+        tz = pytz.utc
+    now = datetime.now(tz)
+    return now.isoformat()
 
 if __name__=='__main__':
     mcp.run()

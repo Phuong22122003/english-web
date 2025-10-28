@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @FeignClient(name = "agent",url = "${app.services.agent}")
 public interface AgentClient {
-    @PostMapping("/plan")
+    @PostMapping("/agent/plan")
     public void generatePlan(UserInfoRequest userInfoRequest);
 }

@@ -5,6 +5,8 @@ from .topic_service import topic_service
 import json
 import os
 from app.core import settings
+import httpx
+import asyncio
 from fastmcp import Client
 import threading, requests
 if not os.environ.get("GOOGLE_API_KEY"):
@@ -58,7 +60,9 @@ class AgentService:
     async def plan(self, plan: Plan):
         print("Creating plan...")
         client = await MCPClientHolder.get_client()
-        prompt = await client.get_prompt("get_plan_prompt", arguments={"user_info": plan["user_info"]})
+        current_time = await client.call_tool("get_current_time", {"timezone": "Asia/Ho_Chi_Minh"})
+        current_time_str = current_time.content[0].text
+        prompt = await client.get_prompt("get_plan_prompt", arguments={"user_info": plan["user_info"], "current_time": current_time_str})
         prompt = prompt.messages[0].content.text
 
         response = self.llm.invoke(prompt)
@@ -109,24 +113,35 @@ class AgentService:
                     if topic:
                         plan_detail.append({"topicType": topic["topic_type"], "topicId": topic["id"]})
             if plan_detail:
-                group.setdefault("planDetails", []).extend(plan_detail)
-        fire_and_forget(settings.PLAN_SERVICE_CALLBACK_URL, plan)
+                group.setdefault("details", []).extend(plan_detail)
+        await send_callback(normalize_datetime_fields(plan))
         return plan
 
-def fire_and_forget(url, data):
-    print("Sending callback...")
-    try:
-        headers = {
-                "Authorization": f"Bearer {settings.JWT}",
-                "Content-Type": "application/json"
-        }
-        requests.post(
-            url,
-            json=data,
-            headers=headers
-        )
-    except requests.exceptions.ReadTimeout:
-        print("Request sent, not waiting for response.")
+async def send_callback(plan):
+    async with httpx.AsyncClient(timeout=5) as client:
+        try:
+            response = await client.post(
+                "http://localhost:8083/learning-service/plan/callback",
+                json=plan
+            )
+            print("✅ Callback response:", response.status_code, response.text)
+        except Exception as e:
+            print("⚠️ Callback failed:", e)
+
+def normalize_datetime_fields(plan):
+    def ensure_full_datetime(value):
+        if isinstance(value, str) and len(value) == 10:  # dạng '2023-10-27'
+            return value + "T00:00:00"
+        return value
+
+    plan["startDate"] = ensure_full_datetime(plan.get("startDate"))
+    plan["endDate"] = ensure_full_datetime(plan.get("endDate"))
+
+    for group in plan.get("planGroups", []):
+        group["startDate"] = ensure_full_datetime(group.get("startDate"))
+        group["endDate"] = ensure_full_datetime(group.get("endDate"))
+
+    return plan
 
 # from typing_extensions import List, TypedDict
 

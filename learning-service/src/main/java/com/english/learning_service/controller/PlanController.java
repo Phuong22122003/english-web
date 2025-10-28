@@ -33,8 +33,8 @@ public class PlanController {
     }
 
     @PostMapping("/callback")
-    public ResponseEntity<?> callBack(@RequestBody PlanRequest request) {
-        planService.sendNotification(request);
+    public ResponseEntity<?> callBack(@RequestBody(required = false) PlanRequest request) {
+            planService.sendNotification(request);
         return ResponseEntity.ok(null);
     }
 
