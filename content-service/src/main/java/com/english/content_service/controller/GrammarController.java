@@ -25,6 +25,10 @@ public class GrammarController {
     GrammarService grammarService;
 
     // ========================= TOPIC =========================
+    @GetMapping("/search")
+    public ResponseEntity<?> search(@RequestParam String q, @RequestParam Integer page, @RequestParam Integer limit){
+        return ResponseEntity.ok(grammarService.search(q,page,limit));
+    }
 
     @GetMapping("/topics")
     public ResponseEntity<?> getTopics(@RequestParam(defaultValue = "0") int page,

@@ -1,18 +1,22 @@
 package com.english.learning_service.service.implt;
 
+import com.english.dto.response.GrammarTopicResponse;
+import com.english.dto.response.ListeningTopicResponse;
+import com.english.dto.response.VocabTopicResponse;
 import com.english.exception.AppException;
 import com.english.exception.NotFoundException;
-import com.english.learning_service.dto.request.PlanGroupRequest;
-import com.english.learning_service.dto.request.PlanIntentRequest;
-import com.english.learning_service.dto.request.PlanRequest;
-import com.english.learning_service.dto.request.UserInfoRequest;
+import com.english.learning_service.dto.request.*;
 import com.english.learning_service.dto.response.PlanGroupResponse;
 import com.english.learning_service.dto.response.PlanResponse;
 import com.english.learning_service.entity.ExamHistory;
 import com.english.learning_service.entity.Plan;
 import com.english.learning_service.entity.PlanDetail;
 import com.english.learning_service.entity.PlanGroup;
+import com.english.learning_service.enums.ItemTypeEnum;
 import com.english.learning_service.httpclient.AgentClient;
+import com.english.learning_service.httpclient.GrammarClient;
+import com.english.learning_service.httpclient.ListeningClient;
+import com.english.learning_service.httpclient.VocabularyClient;
 import com.english.learning_service.mapper.PlanMapper;
 import com.english.learning_service.repository.ExamHistoryRepository;
 import com.english.learning_service.repository.PlanDetailRepository;
@@ -50,6 +54,10 @@ public class PlanServiceImplt implements PlanService {
     PlanGroupRepository planGroupRepository;
     ExamHistoryRepository examHistoryRepository;
     AgentClient agentClient;
+    ListeningClient listeningClient;
+    VocabularyClient vocabularyClient;
+    GrammarClient grammarClient;
+
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
     @Override
     @Transactional
@@ -114,16 +122,97 @@ public class PlanServiceImplt implements PlanService {
     }
 
     @Override
-    public void sendNotification(PlanRequest planRequest) {
-        var context = SecurityContextHolder.getContext();
-        String userId = context.getAuthentication().getName();
+    public void sendNotification(CallBackRequest planRequest) {
+
+        String userId = planRequest.getUserId();
+
         SseEmitter emitter = emitters.get(userId);
-        if (emitter != null) {
-            try {
-                emitter.send(SseEmitter.event().name("UPDATE").data(planRequest));
-            } catch (IOException e) {
-                emitter.completeWithError(e);
+        if (emitter == null) return;
+
+        // 🔹 Danh sách ID của các topic
+        List<String> vocabIds = new ArrayList<>();
+        List<String> grammarIds = new ArrayList<>();
+        List<String> listeningIds = new ArrayList<>();
+
+        // 🔹 Map để chứa topic đã lấy được
+        Map<String, VocabTopicResponse> vocabMap = new HashMap<>();
+        Map<String, GrammarTopicResponse> grammarMap = new HashMap<>();
+        Map<String, ListeningTopicResponse> listeningMap = new HashMap<>();
+        for(var group:planRequest.getPlanGroups()){
+            group.setPlanDetails(group.getDetails());
+        }
+        // 🔹 Chuyển request sang response DTO (mapper bạn đã có)
+        PlanResponse planResponse = planMapper.toPlanResponse(planRequest);
+
+        // 👉 B1: Gom ID theo loại
+        for (var group : planRequest.getPlanGroups()) {
+            for (var detail : group.getDetails()) {
+                switch (detail.getTopicType()) {
+                    case VOCABULARY -> vocabIds.add(detail.getTopicId());
+                    case GRAMMAR -> grammarIds.add(detail.getTopicId());
+                    case LISTENING -> listeningIds.add(detail.getTopicId());
+                }
             }
+        }
+
+        // 👉 B2: Gọi sang các service khác lấy dữ liệu
+        if (!vocabIds.isEmpty()) {
+            List<VocabTopicResponse> vocabTopics = vocabularyClient.getTopicsByIds(vocabIds);
+            for (VocabTopicResponse v : vocabTopics) {
+                vocabMap.put(v.getId(), v);
+            }
+        }
+
+        if (!grammarIds.isEmpty()) {
+            List<GrammarTopicResponse> grammarTopics = grammarClient.getTopicsByIds(grammarIds);
+            for (GrammarTopicResponse g : grammarTopics) {
+                grammarMap.put(g.getId(), g);
+            }
+        }
+
+        if (!listeningIds.isEmpty()) {
+            List<ListeningTopicResponse> listeningTopics = listeningClient.getTopicsByIds(listeningIds);
+            for (ListeningTopicResponse l : listeningTopics) {
+                listeningMap.put(l.getId(), l);
+            }
+        }
+
+        // 👉 B3: Bổ sung thông tin topic cho từng detail
+        for (var group : planResponse.getPlanGroups()) {
+            for (var detail : group.getPlanDetails()) {
+                switch (detail.getTopicType()) {
+                    case VOCABULARY -> {
+                        var topic = vocabMap.get(detail.getTopicId());
+                        if (topic != null) {
+                            detail.setTopicName(topic.getName());
+                            detail.setDescription(topic.getDescription());
+                        }
+                    }
+                    case GRAMMAR -> {
+                        var topic = grammarMap.get(detail.getTopicId());
+                        if (topic != null) {
+                            detail.setTopicName(topic.getName());
+                            detail.setDescription(topic.getDescription());
+                        }
+                    }
+                    case LISTENING -> {
+                        var topic = listeningMap.get(detail.getTopicId());
+                        if (topic != null) {
+                            detail.setTopicName(topic.getName());
+                            detail.setDescription(topic.getDescription());
+                        }
+                    }
+                }
+            }
+        }
+
+        // 👉 B4: Gửi SSE event
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("UPDATE")
+                    .data(planResponse)); // gửi bản đã enrich
+        } catch (IOException e) {
+            emitter.completeWithError(e);
         }
     }
 
@@ -142,11 +231,76 @@ public class PlanServiceImplt implements PlanService {
         PlanResponse response = planMapper.toPlanResponse(plan);
         response.setPlanGroups(new ArrayList<>());
         List<PlanGroup> groups = planGroupRepository.findByPlanId(planId);
+        List<String> vocabIds = new ArrayList<>();
+        List<String> listeningIds = new ArrayList<>();
+        List<String> grammarIds = new ArrayList<>();
         for(var group: groups){
             var groupResponse = planMapper.toPlanGroupResponse(group);
             var details = planDetailRepository.findByPlanGroupId(group.getId());
+            for(var detail: details){
+                if(detail.getTopicType().equals(ItemTypeEnum.VOCABULARY)){
+                    vocabIds.add(detail.getTopicId());
+                }
+                else if(detail.getTopicType().equals(ItemTypeEnum.LISTENING)){
+                    listeningIds.add(detail.getTopicId());
+                }
+                else{
+                    grammarIds.add(detail.getTopicId());
+                }
+            }
             groupResponse.setPlanDetails(planMapper.toPlanDetailResponses(details));
             response.getPlanGroups().add(groupResponse);
+        }
+        Map<String, GrammarTopicResponse> grammarMap = new HashMap<>();
+        Map<String, VocabTopicResponse> vocabMap = new HashMap<>();
+        Map<String, ListeningTopicResponse> listeningMap = new HashMap<>();
+
+        if (!grammarIds.isEmpty()) {
+            List<GrammarTopicResponse> grammarTopics = grammarClient.getTopicsByIds(grammarIds);
+            for (GrammarTopicResponse g : grammarTopics) {
+                grammarMap.put(g.getId(), g);
+            }
+        }
+
+        if (!vocabIds.isEmpty()) {
+            List<VocabTopicResponse> vocabTopics = vocabularyClient.getTopicsByIds(vocabIds);
+            for (VocabTopicResponse v : vocabTopics) {
+                vocabMap.put(v.getId(), v);
+            }
+        }
+
+        if (!listeningIds.isEmpty()) {
+            List<ListeningTopicResponse> listeningTopics = listeningClient.getTopicsByIds(listeningIds);
+            for (ListeningTopicResponse l : listeningTopics) {
+                listeningMap.put(l.getId(), l);
+            }
+        }
+        for(var group: response.getPlanGroups()){
+            for(var detail: group.getPlanDetails()){
+                switch (detail.getTopicType()) {
+
+                    case VOCABULARY -> {
+                        var topic = vocabMap.get(detail.getTopicId());
+                        if (topic == null) continue;
+                        detail.setTopicName(topic.getName());
+                        detail.setDescription(topic.getDescription());
+                    }
+
+                    case GRAMMAR -> {
+                        var topic = grammarMap.get(detail.getTopicId());
+                        if (topic == null) continue;
+                        detail.setTopicName(topic.getName());
+                        detail.setDescription(topic.getDescription());
+                    }
+
+                    case LISTENING -> {
+                        var topic = listeningMap.get(detail.getTopicId());
+                        if (topic == null) continue;
+                        detail.setTopicName(topic.getName());
+                        detail.setDescription(topic.getDescription());
+                    }
+                }
+            }
         }
         return response;
     }

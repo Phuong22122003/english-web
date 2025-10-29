@@ -14,6 +14,7 @@ import java.util.List;
 @Service
 public interface ListeningService {
     //topic
+    public Page<ListeningTopicResponse> search(String query, int page, int limit);
     public Page<ListeningTopicResponse> getTopics(int page, int size);
     public ListeningTopicResponse addTopic(ListeningTopicRequest request, MultipartFile imageFile);
     public List<ListeningTopicResponse> getTopicsByIds(List<String> ids);

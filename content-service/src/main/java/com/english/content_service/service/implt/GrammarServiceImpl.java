@@ -44,6 +44,23 @@ public class GrammarServiceImpl implements GrammarService {
     AgentService agentService;
 
     @Override
+    public Page<GrammarTopicResponse> search(String query, int page, int limit) {
+        Page<GrammarTopic> topics;
+
+        if (query == null || query.trim().isEmpty()) {
+            topics = grammarTopicRepository.findAll(PageRequest.of(page, limit));
+        } else {
+            topics = grammarTopicRepository
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+                            query.trim(), query.trim(), PageRequest.of(page, limit)
+                    );
+        }
+
+        List<GrammarTopicResponse> responses = grammarMapper.toGrammarTopicResponses(topics.getContent());
+        return new PageImpl<>(responses, PageRequest.of(page, limit), topics.getTotalElements());
+    }
+
+    @Override
     public Page<GrammarTopicResponse> getTopics(int page, int size) {
         Page<GrammarTopic> topics = grammarTopicRepository.findAll(PageRequest.of(page, size));
         List<GrammarTopic> topicList = topics.getContent();

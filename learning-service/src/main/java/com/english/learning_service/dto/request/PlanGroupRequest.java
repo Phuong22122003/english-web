@@ -17,6 +17,7 @@ public class PlanGroupRequest {
     private String name;
     private String description;
     private List<PlanDetailRequest> details;
+    private List<PlanDetailRequest> planDetails;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 }

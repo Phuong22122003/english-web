@@ -13,6 +13,7 @@ import java.util.List;
 @Service
 public interface GrammarService {
     //topic
+    Page<GrammarTopicResponse> search(String query, int page, int limit);
     Page<GrammarTopicResponse> getTopics(int page, int size);
     GrammarTopicResponse addTopic(GrammarTopicRequest topic, MultipartFile imageFile);
     List<GrammarTopicResponse> getTopicsByIds(List<String> ids);

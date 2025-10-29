@@ -26,6 +26,11 @@ public class VocabularyController {
 
     // ========================= TOPIC =========================
 
+    @GetMapping("/search")
+    public ResponseEntity<?> search(@RequestParam String q, @RequestParam Integer page, @RequestParam Integer limit){
+        return ResponseEntity.ok(vocabularyService.search(q,page,limit));
+    }
+
     @GetMapping("/topics")
     public ResponseEntity<?> getAllTopics(@RequestParam(defaultValue = "0") int page,
                                           @RequestParam(defaultValue = "10") int size) {

@@ -18,7 +18,8 @@ public class SecurityConfiguration {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/authenticate/**",
-            "/plan/agent-generation"
+            "/plan/agent-generation",
+            "/plan/callback"
     };
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {

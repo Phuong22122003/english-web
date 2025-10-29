@@ -11,4 +11,9 @@ import org.springframework.stereotype.Repository;
 public interface GrammarTopicRepository extends JpaRepository<GrammarTopic, String> {
     // Add custom query methods here if needed
     public Page<GrammarTopic> findAll(Pageable pageable);
+    Page<GrammarTopic> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+            String name,
+            String description,
+            Pageable pageable
+    );
 }

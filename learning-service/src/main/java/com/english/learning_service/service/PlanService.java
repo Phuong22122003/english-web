@@ -1,5 +1,6 @@
 package com.english.learning_service.service;
 
+import com.english.learning_service.dto.request.CallBackRequest;
 import com.english.learning_service.dto.request.PlanIntentRequest;
 import com.english.learning_service.dto.request.PlanRequest;
 import com.english.learning_service.dto.response.PlanResponse;
@@ -11,7 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public interface PlanService {
     PlanResponse addPlan(PlanRequest request);
     SseEmitter addPlanByAgent(PlanIntentRequest request);
-    void sendNotification(PlanRequest planRequest);
+    void sendNotification(CallBackRequest planRequest);
     Page<PlanResponse> getPlan(int page, int size);
     PlanResponse getPlanDetail(String planId);
     void deletePlan(String planId);

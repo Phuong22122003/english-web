@@ -19,6 +19,7 @@ public class PlanDetailResponse {
     private ItemTypeEnum topicType;
     private String topicId;
     private String topicName;
+    private String description;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 }

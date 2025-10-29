@@ -11,4 +11,10 @@ import org.springframework.data.domain.Pageable;
 public interface VocabularyTopicRepository extends JpaRepository<VocabularyTopic, String> {
     // Add custom query methods here if needed
     public Page<VocabularyTopic> findAll(Pageable pageable);
+
+    Page<VocabularyTopic> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+            String name,
+            String description,
+            Pageable pageable
+    );
 }

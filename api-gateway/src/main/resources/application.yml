@@ -22,9 +22,11 @@ spring:
                 filters:
                     - StripPrefix=1
             -   id: learning-service
-                uri: ${LEARNING_SERVICE_URL:http://loccalhost:8083}
+                uri: ${LEARNING_SERVICE_URL:http://localhost:8083}
                 predicates:
-                  - Path=${app.api-prefix}/learning-service/**
+                    - Path=${app.api-prefix}/learning-service/**
+                filters:
+                    - StripPrefix=1
             -   id: agent-service
                 uri: ${AGENT_SERVICE_URL:http://localhost:5000}
                 predicates:

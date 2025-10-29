@@ -11,12 +11,15 @@ import com.english.learning_service.entity.Plan;
 import com.english.learning_service.entity.PlanDetail;
 import com.english.learning_service.entity.PlanGroup;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PlanMapper {
     Plan toPlan(PlanRequest request);
+
+    PlanResponse toPlanResponse(PlanRequest planRequest);
 
     PlanGroup toPlanGroup(PlanGroupRequest request);
     List<PlanGroup> toPlanGroups(List<PlanGroupRequest> request);

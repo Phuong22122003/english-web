@@ -48,6 +48,25 @@ public class VocabularyServiceImpl implements VocabularyService {
     VocabularyMapper vocabularyMapper;
     FileService fileService;
     AgentService agentService;
+
+    @Override
+    public Page<VocabTopicResponse> search(String query, int page, int limit) {
+        Page<VocabularyTopic> topics;
+
+        if (query == null || query.trim().isEmpty()) {
+            topics = vocabularyTopicRepository.findAll(PageRequest.of(page, limit));
+        } else {
+            topics = vocabularyTopicRepository
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+                            query.trim(), query.trim(), PageRequest.of(page, limit)
+                    );
+        }
+
+        List<VocabTopicResponse> topicResponses = vocabularyMapper.toVocabTopicResponses(topics.getContent());
+        return new PageImpl<>(topicResponses, PageRequest.of(page, limit), topics.getTotalElements());
+    }
+
+
     @Override
     public Page<VocabTopicResponse> getTopics(int page, int size) {
         Page<VocabularyTopic> topics = vocabularyTopicRepository.findAll(PageRequest.of(page, size));

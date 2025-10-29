@@ -1,6 +1,7 @@
 package com.english.learning_service.controller;
 
 import com.english.dto.response.ApiResponse;
+import com.english.learning_service.dto.request.CallBackRequest;
 import com.english.learning_service.dto.request.PlanIntentRequest;
 import com.english.learning_service.dto.request.PlanRequest;
 import com.english.learning_service.dto.response.PlanResponse;
@@ -33,7 +34,7 @@ public class PlanController {
     }
 
     @PostMapping("/callback")
-    public ResponseEntity<?> callBack(@RequestBody(required = false) PlanRequest request) {
+    public ResponseEntity<?> callBack(@RequestBody(required = false) CallBackRequest request) {
             planService.sendNotification(request);
         return ResponseEntity.ok(null);
     }

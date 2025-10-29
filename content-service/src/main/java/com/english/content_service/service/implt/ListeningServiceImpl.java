@@ -49,6 +49,25 @@ public class ListeningServiceImpl implements ListeningService {
     ListeningTestRepository listeningTestRepository;
     ListeningTestQuestionRepository listeningTestQuestionRepository;
     AgentService agentService;
+
+    @Override
+    public Page<ListeningTopicResponse> search(String query, int page, int limit) {
+        Page<ListeningTopic> topics;
+
+        if (query == null || query.trim().isEmpty()) {
+            topics = listeningTopicRepository.findAll(PageRequest.of(page, limit));
+        } else {
+            topics = listeningTopicRepository
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+                            query.trim(), query.trim(), PageRequest.of(page, limit)
+                    );
+        }
+
+        List<ListeningTopicResponse> responses = listeningMapper.toTopicResponses(topics.getContent());
+        return new PageImpl<>(responses, PageRequest.of(page, limit), topics.getTotalElements());
+    }
+
+
     @Override
     public Page<ListeningTopicResponse> getTopics(int page, int size) {
         Page<ListeningTopic> topics = listeningTopicRepository.findAll(PageRequest.of(page, size));

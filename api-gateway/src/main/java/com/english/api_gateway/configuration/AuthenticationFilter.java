@@ -32,7 +32,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     private String API_PREFIX;
     String[] publicEndPoints = {
             "/user-service/authenticate/signup",
-            "/user-service/authenticate/login"
+            "/user-service/authenticate/login",
+            "/learning-service/plan/agent-generation"
     };
 
     private IdentityService identityService;

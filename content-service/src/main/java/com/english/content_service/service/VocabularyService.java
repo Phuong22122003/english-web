@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public interface VocabularyService {
     //topic
+    public Page<VocabTopicResponse> search(String query, int page, int limit);
     public Page<VocabTopicResponse> getTopics(int page, int size);
     public VocabTopicResponse addTopic(VocabTopicRequest request, MultipartFile imageFile);
     public VocabTopicResponse updateTopic(String topicId, VocabTopicRequest request, MultipartFile imageFile);
