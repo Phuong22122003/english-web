@@ -39,8 +39,8 @@ public class PlanController {
         return ResponseEntity.ok(null);
     }
 
-    @PostMapping("/agent-generation")
-    public SseEmitter addPlan(@RequestBody PlanIntentRequest request){
+    @GetMapping("/agent-generation")
+    public SseEmitter addPlan(PlanIntentRequest request){
         return planService.addPlanByAgent(request);
     }
     /**
