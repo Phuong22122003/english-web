@@ -19,6 +19,7 @@ import com.english.learning_service.repository.PlanDetailRepository;
 import com.english.learning_service.repository.PlanGroupRepository;
 import com.english.learning_service.repository.PlanRepository;
 import com.english.learning_service.service.PlanService;
+import com.english.learning_service.util.JwtUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -85,8 +86,7 @@ public class PlanServiceImplt implements PlanService {
 
     @Override
     public SseEmitter addPlanByAgent(PlanIntentRequest request) {
-        var context = SecurityContextHolder.getContext();
-        String userId = context.getAuthentication().getName();
+        String userId = JwtUtils.extractUserId(request.getJwt());
 
         UserInfoRequest userInfoRequest = new UserInfoRequest();
         userInfoRequest.setLevel(request.getLevel());

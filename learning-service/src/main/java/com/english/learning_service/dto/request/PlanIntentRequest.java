@@ -15,4 +15,5 @@ public class PlanIntentRequest {
     Integer target;
     String description;
     Level level;
+    String jwt;
 }
