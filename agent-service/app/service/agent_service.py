@@ -35,12 +35,10 @@ class AgentService:
         # Compile application and test
         graph_builder = StateGraph(Plan)
         graph_builder.add_node(self.plan,'plan')
-        graph_builder.add_node(self.user_data,'user_data')
         graph_builder.add_node(self.plan_group,'plan_group')
         graph_builder.add_node(self.plan_detail,'plan_detail')
         
-        graph_builder.add_edge(START, "user_data")
-        graph_builder.add_edge("user_data", "plan")
+        graph_builder.add_edge(START, "plan")
         graph_builder.add_edge("plan", "plan_group")
         graph_builder.add_edge("plan_group", "plan_detail")
         graph_builder.add_edge("plan_detail", END)
@@ -48,14 +46,8 @@ class AgentService:
         self.graph = graph_builder.compile()
         
     async def invoke(self, input_data:dict):
-        result = await self.graph.ainvoke({'user_info': input_data})
+        result = await self.graph.ainvoke({'user_info': input_data, 'user_id': input_data.get("user_id", "")})
         return result
-    
-    async def user_data(self, state: Plan):
-        print("Fetching user data...")
-        client = await MCPClientHolder.get_client()
-        user_info = await client.call_tool("get_user_info", {"user_id": "user-123"})
-        return {"user_info": user_info.content[0].text}
 
     async def plan(self, plan: Plan):
         print("Creating plan...")
@@ -114,15 +106,15 @@ class AgentService:
                         plan_detail.append({"topicType": topic["topic_type"], "topicId": topic["id"]})
             if plan_detail:
                 group.setdefault("details", []).extend(plan_detail)
-        await send_callback(normalize_datetime_fields(plan))
+        await send_callback(normalize_datetime_fields(plan), plan.get("user_id", ""))
         return plan
 
-async def send_callback(plan):
+async def send_callback(plan, userId):
     async with httpx.AsyncClient(timeout=5) as client:
         try:
             response = await client.post(
                 "http://localhost:8083/learning-service/plan/callback",
-                json=plan
+                json= {**plan, "userId": userId}
             )
             print("✅ Callback response:", response.status_code, response.text)
         except Exception as e:

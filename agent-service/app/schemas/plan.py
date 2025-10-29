@@ -12,6 +12,7 @@ class PlanGroup(TypedDict):
     details: List[PlanDetail] 
     
 class Plan(TypedDict):
+    user_id: str
     user_info: str
     title: str
     description: str

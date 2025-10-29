@@ -13,6 +13,7 @@ router = APIRouter()
 
 @router.post("/pronunciation/{text}")
 def get_pronunciation(text:str):
+    print("Getting pronunciation for text:", text)
     text = text.strip()
 
     # 1️⃣ Lấy phiên âm IPA
@@ -38,6 +39,7 @@ def get_pronunciation(text:str):
 
 @router.post("/pronunciation")
 async def check_pronunciation(file:UploadFile=File(...), text:str=Form(...)):
+    print("Checking pronunciation for text:", text)
     # Đọc toàn bộ bytes từ UploadFile
     audio_bytes = await file.read()
     
