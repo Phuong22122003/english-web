@@ -46,10 +46,12 @@ class AgentService:
         self.graph = graph_builder.compile()
         
     async def invoke(self, input_data:dict):
-        result = await self.graph.ainvoke({'user_info': input_data, 'user_id': input_data.get("user_id", "")})
+        print("Invoking agent service with input data:", input_data)
+        result = await self.graph.ainvoke({'user_info': input_data, 'userId': input_data.get("user_info", "").get("userId", "")})
         return result
 
     async def plan(self, plan: Plan):
+        print("userId:", plan.get("userId", "ko co"))
         print("Creating plan...")
         client = await MCPClientHolder.get_client()
         current_time = await client.call_tool("get_current_time", {"timezone": "Asia/Ho_Chi_Minh"})
@@ -84,6 +86,7 @@ class AgentService:
         
     async def plan_detail(self, plan:Plan):
         print("Creating plan details...")
+        print("userId:", plan.get("userId", "ko co"))
         client = await MCPClientHolder.get_client()
         for group in plan["planGroups"]: 
             data = topic_service.search(group['name'] + group['description'])
@@ -106,7 +109,7 @@ class AgentService:
                         plan_detail.append({"topicType": topic["topic_type"], "topicId": topic["id"]})
             if plan_detail:
                 group.setdefault("details", []).extend(plan_detail)
-        await send_callback(normalize_datetime_fields(plan), plan.get("user_id", ""))
+        await send_callback(normalize_datetime_fields(plan), plan.get("userId", ""))
         return plan
 
 async def send_callback(plan, userId):

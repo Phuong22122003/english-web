@@ -6,6 +6,7 @@ import com.english.dto.response.VocabTopicResponse;
 import com.english.exception.AppException;
 import com.english.exception.NotFoundException;
 import com.english.learning_service.dto.request.*;
+import com.english.learning_service.dto.response.PlanDetailResponse;
 import com.english.learning_service.dto.response.PlanGroupResponse;
 import com.english.learning_service.dto.response.PlanResponse;
 import com.english.learning_service.entity.ExamHistory;
@@ -79,7 +80,7 @@ public class PlanServiceImplt implements PlanService {
             group.setPlan(plan);
             group = planGroupRepository.save(group);
 
-            var detailRequests = g.getDetails();
+            var detailRequests = g.getPlanDetails();
             var details = planMapper.toPlanDetails(detailRequests);
             for(var d: details){d.setPlanGroup(group);}
             planDetailRepository.saveAll(details);
@@ -94,6 +95,7 @@ public class PlanServiceImplt implements PlanService {
 
     @Override
     public SseEmitter addPlanByAgent(PlanIntentRequest request) {
+
         String userId = JwtUtils.extractUserId(request.getJwt());
 
         UserInfoRequest userInfoRequest = new UserInfoRequest();
@@ -109,15 +111,14 @@ public class PlanServiceImplt implements PlanService {
             e.setTestId(null);
             e.setSubmittedAt(null);
         });
-        userInfoRequest.setRecentExamHistory(examHistories);
-        agentClient.generatePlan(userInfoRequest);
-
-        SseEmitter emitter = new SseEmitter(0L); // Không timeout
-        emitters.put(userId, emitter);
-
+        SseEmitter emitter = new SseEmitter(0L);
         emitter.onCompletion(() -> emitters.remove(userId));
         emitter.onTimeout(() -> emitters.remove(userId));
         emitter.onError((e) -> emitters.remove(userId));
+        emitters.put(userId, emitter);
+        userInfoRequest.setRecentExamHistory(examHistories);
+        agentClient.generatePlan(userInfoRequest);
+
         return emitter;
     }
 
@@ -142,7 +143,7 @@ public class PlanServiceImplt implements PlanService {
             group.setPlanDetails(group.getDetails());
         }
         // 🔹 Chuyển request sang response DTO (mapper bạn đã có)
-        PlanResponse planResponse = planMapper.toPlanResponse(planRequest);
+        PlanResponse planResponse = toPlanResponse(planRequest);
 
         // 👉 B1: Gom ID theo loại
         for (var group : planRequest.getPlanGroups()) {
@@ -211,6 +212,8 @@ public class PlanServiceImplt implements PlanService {
             emitter.send(SseEmitter.event()
                     .name("UPDATE")
                     .data(planResponse)); // gửi bản đã enrich
+            emitter.complete();
+            emitters.remove(userId);
         } catch (IOException e) {
             emitter.completeWithError(e);
         }
@@ -387,6 +390,62 @@ public class PlanServiceImplt implements PlanService {
         PlanResponse response = planMapper.toPlanResponse(plan);
         response.setPlanGroups(groupResponses);
         return response;
+    }
+
+    public PlanResponse toPlanResponse(PlanRequest planRequest) {
+        if (planRequest == null) return null;
+
+        PlanResponse planResponse = new PlanResponse();
+        planResponse.setTitle(planRequest.getTitle());
+        planResponse.setDescription(planRequest.getDescription());
+        planResponse.setStartDate(planRequest.getStartDate());
+        planResponse.setEndDate(planRequest.getEndDate());
+        planResponse.setTarget(planRequest.getTarget());
+        planResponse.setCompleted(false); // vì lúc tạo mới thì mặc định chưa hoàn thành
+
+        // Map PlanGroups
+        if (planRequest.getPlanGroups() != null && !planRequest.getPlanGroups().isEmpty()) {
+            List<PlanGroupResponse> groupResponses = new ArrayList<>();
+
+            for (PlanGroupRequest groupRequest : planRequest.getPlanGroups()) {
+                PlanGroupResponse groupResponse = new PlanGroupResponse();
+                groupResponse.setName(groupRequest.getName());
+                groupResponse.setDescription(groupRequest.getDescription());
+                groupResponse.setStartDate(groupRequest.getStartDate());
+                groupResponse.setEndDate(groupRequest.getEndDate());
+
+                // Map PlanDetails
+                List<PlanDetailRequest> details = groupRequest.getPlanDetails() != null
+                        ? groupRequest.getPlanDetails()
+                        : groupRequest.getDetails(); // đề phòng bạn dùng 1 trong 2 field
+
+                if (details != null && !details.isEmpty()) {
+                    List<PlanDetailResponse> detailResponses = new ArrayList<>();
+
+                    for (PlanDetailRequest detailRequest : details) {
+                        PlanDetailResponse detailResponse = new PlanDetailResponse();
+                        detailResponse.setTopicType(detailRequest.getTopicType());
+                        detailResponse.setTopicId(detailRequest.getTopicId());
+                        detailResponse.setStartDate(detailRequest.getStartDate());
+                        detailResponse.setEndDate(detailRequest.getEndDate());
+                        // bạn có thể set thêm topicName hoặc description nếu cần
+                        detailResponses.add(detailResponse);
+                    }
+
+                    groupResponse.setPlanDetails(detailResponses);
+                } else {
+                    groupResponse.setPlanDetails(new ArrayList<>());
+                }
+
+                groupResponses.add(groupResponse);
+            }
+
+            planResponse.setPlanGroups(groupResponses);
+        } else {
+            planResponse.setPlanGroups(new ArrayList<>());
+        }
+
+        return planResponse;
     }
 
 }

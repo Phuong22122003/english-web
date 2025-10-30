@@ -21,6 +21,10 @@ public interface PlanMapper {
 
     PlanResponse toPlanResponse(PlanRequest planRequest);
 
+    PlanGroupResponse toPlanGroupResponse(PlanGroupRequest groupRequest);
+
+    PlanDetailResponse toPlanDetailResponse(PlanDetailRequest detailRequest);
+
     PlanGroup toPlanGroup(PlanGroupRequest request);
     List<PlanGroup> toPlanGroups(List<PlanGroupRequest> request);
 
