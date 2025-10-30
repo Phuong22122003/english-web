@@ -2,7 +2,8 @@ package com.english.user_service.dto.response;
 
 import java.time.LocalDateTime;
 
-import com.english.user_service.enums.Level;
+
+import com.english.enums.Level;
 import com.english.user_service.enums.StudyTime;
 import com.english.user_service.enums.UserRole;
 import com.fasterxml.jackson.annotation.JsonInclude;

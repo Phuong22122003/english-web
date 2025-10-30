@@ -2,7 +2,7 @@ package com.english.user_service.entity;
 
 import java.time.LocalDateTime;
 
-import com.english.user_service.enums.Level;
+import com.english.enums.Level;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 

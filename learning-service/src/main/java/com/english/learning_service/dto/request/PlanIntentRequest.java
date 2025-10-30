@@ -1,6 +1,6 @@
 package com.english.learning_service.dto.request;
 
-import com.english.learning_service.enums.Level;
+import com.english.enums.Level;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

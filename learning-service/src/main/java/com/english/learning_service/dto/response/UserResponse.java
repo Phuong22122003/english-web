@@ -1,6 +1,6 @@
 package com.english.learning_service.dto.response;
 
-import com.english.learning_service.enums.Level;
+import com.english.enums.Level;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.english.learning_service.enums;
+package com.english.enums;
 
 public enum Level {
     BEGINNER,
